@@ -1,0 +1,102 @@
+name: Kubernetes Validation
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'gateway-api/**'
+      - 'service-mesh/**'
+      - 'monitoring/**'
+      - 'security/**'
+      - 'flux/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'gateway-api/**'
+      - 'service-mesh/**'
+      - 'monitoring/**'
+      - 'security/**'
+      - 'flux/**'
+
+jobs:
+  kubernetes-validate:
+    name: Validate Kubernetes Manifests
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+
+    - name: Setup kubeval
+      run: |
+        wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+        tar xf kubeval-linux-amd64.tar.gz
+        sudo mv kubeval /usr/local/bin
+
+    - name: Validate Gateway API manifests
+      run: |
+        find gateway-api/ -name "*.yaml" -exec kubeval {} \;
+
+    - name: Validate Service Mesh manifests
+      run: |
+        find service-mesh/ -name "*.yaml" -exec kubeval {} \;
+
+    - name: Validate Monitoring manifests
+      run: |
+        find monitoring/ -name "*.yaml" -exec kubeval {} \;
+
+    - name: Validate Security manifests
+      run: |
+        find security/ -name "*.yaml" -exec kubeval {} \;
+
+    - name: Validate FluxCD manifests
+      run: |
+        find flux/ -name "*.yaml" -exec kubeval {} \;
+
+  flux-validate:
+    name: Validate FluxCD Configuration
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Flux CLI
+      uses: fluxcd/flux2/action@main
+
+    - name: Validate Flux manifests
+      run: |
+        flux check --pre
+        flux diff kustomization flux-system --path ./flux/clusters/dev
+
+  policy-validation:
+    name: Validate OPA Policies
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup OPA
+      run: |
+        curl -L -o opa https://openpolicyagent.org/downloads/v0.58.0/opa_linux_amd64_static
+        chmod 755 ./opa
+        sudo mv opa /usr/local/bin
+
+    - name: Test OPA policies
+      run: |
+        find transformations/ -name "*.rego" -exec opa test {} \;
+
+  security-scan:
+    name: Security Scan Kubernetes
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run Kubesec scan
+      run: |
+        find gateway-api/ -name "*.yaml" -exec docker run --rm -v $(pwd):/workspace kubesec/kubesec:latest scan /workspace/{} \;
+        find security/ -name "*.yaml" -exec docker run --rm -v $(pwd):/workspace kubesec/kubesec:latest scan /workspace/{} \;

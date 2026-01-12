@@ -1,0 +1,184 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: slo-alerts
+  namespace: monitoring
+  labels:
+    app: prometheus
+    release: prometheus
+spec:
+  groups:
+  - name: slo.rules
+    interval: 30s
+    rules:
+    # P95 Latency SLO
+    - alert: HighLatencyP95
+      expr: histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket{source_app="istio-proxy"}[5m])) by (le)) > 100
+      for: 2m
+      labels:
+        severity: warning
+        slo: latency
+      annotations:
+        summary: "P95 latency is above 100ms SLO target"
+        description: "P95 latency is {{ $value }}ms, which exceeds the 100ms SLO target"
+        runbook_url: "https://github.com/abdoElHodaky/Iacdash-/blob/main/docs/runbooks/high-latency.md"
+    
+    - alert: CriticalLatencyP95
+      expr: histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket{source_app="istio-proxy"}[5m])) by (le)) > 200
+      for: 1m
+      labels:
+        severity: critical
+        slo: latency
+      annotations:
+        summary: "P95 latency is critically high"
+        description: "P95 latency is {{ $value }}ms, which is critically above the 100ms SLO target"
+        runbook_url: "https://github.com/abdoElHodaky/Iacdash-/blob/main/docs/runbooks/critical-latency.md"
+
+    # mTLS Coverage SLO
+    - alert: LowMTLSCoverage
+      expr: (sum(rate(istio_requests_total{security_policy="mutual_tls"}[5m])) / sum(rate(istio_requests_total[5m]))) * 100 < 100
+      for: 5m
+      labels:
+        severity: warning
+        slo: security
+      annotations:
+        summary: "mTLS coverage is below 100% target"
+        description: "mTLS coverage is {{ $value }}%, target is 100%"
+        runbook_url: "https://github.com/abdoElHodaky/Iacdash-/blob/main/docs/runbooks/mtls-coverage.md"
+
+    - alert: CriticalMTLSCoverage
+      expr: (sum(rate(istio_requests_total{security_policy="mutual_tls"}[5m])) / sum(rate(istio_requests_total[5m]))) * 100 < 95
+      for: 2m
+      labels:
+        severity: critical
+        slo: security
+      annotations:
+        summary: "mTLS coverage is critically low"
+        description: "mTLS coverage is {{ $value }}%, which is critically below the 100% target"
+        runbook_url: "https://github.com/abdoElHodaky/Iacdash-/blob/main/docs/runbooks/critical-mtls.md"
+
+    # Uptime SLO (99.99%)
+    - alert: HighErrorRate
+      expr: (sum(rate(istio_requests_total{response_code!~"2.."}[5m])) / sum(rate(istio_requests_total[5m]))) > 0.0001
+      for: 2m
+      labels:
+        severity: warning
+        slo: availability
+      annotations:
+        summary: "Error rate is above 0.01% (99.99% uptime SLO)"
+        description: "Error rate is {{ $value | humanizePercentage }}, which threatens the 99.99% uptime SLO"
+        runbook_url: "https://github.com/abdoElHodaky/Iacdash-/blob/main/docs/runbooks/high-error-rate.md"
+
+    - alert: CriticalErrorRate
+      expr: (sum(rate(istio_requests_total{response_code!~"2.."}[5m])) / sum(rate(istio_requests_total[5m]))) > 0.001
+      for: 1m
+      labels:
+        severity: critical
+        slo: availability
+      annotations:
+        summary: "Error rate is critically high"
+        description: "Error rate is {{ $value | humanizePercentage }}, which severely threatens the 99.99% uptime SLO"
+        runbook_url: "https://github.com/abdoElHodaky/Iacdash-/blob/main/docs/runbooks/critical-error-rate.md"
+
+    # SLO Burn Rate Alerts
+    - alert: FastBurnRate
+      expr: |
+        (
+          (
+            sum(rate(istio_requests_total{response_code!~"2.."}[1h]))
+            /
+            sum(rate(istio_requests_total[1h]))
+          )
+          /
+          (1 - 0.9999)
+        ) > 14.4
+      for: 2m
+      labels:
+        severity: critical
+        slo: burn_rate
+      annotations:
+        summary: "Fast burn rate detected - SLO budget will be exhausted in < 6 hours"
+        description: "Current burn rate will exhaust the monthly SLO error budget in less than 6 hours"
+        runbook_url: "https://github.com/abdoElHodaky/Iacdash-/blob/main/docs/runbooks/fast-burn-rate.md"
+
+    - alert: SlowBurnRate
+      expr: |
+        (
+          (
+            sum(rate(istio_requests_total{response_code!~"2.."}[6h]))
+            /
+            sum(rate(istio_requests_total[6h]))
+          )
+          /
+          (1 - 0.9999)
+        ) > 6
+      for: 15m
+      labels:
+        severity: warning
+        slo: burn_rate
+      annotations:
+        summary: "Slow burn rate detected - SLO budget consumption is elevated"
+        description: "Current burn rate will exhaust the monthly SLO error budget in less than 5 days"
+        runbook_url: "https://github.com/abdoElHodaky/Iacdash-/blob/main/docs/runbooks/slow-burn-rate.md"
+
+    # Deployment Velocity SLO
+    - alert: SlowDeployments
+      expr: avg_over_time(deployment_duration_seconds[24h]) > 600
+      for: 10m
+      labels:
+        severity: warning
+        slo: velocity
+      annotations:
+        summary: "Deployment velocity is below target"
+        description: "Average deployment time is {{ $value }}s, target is < 300s (50% improvement)"
+        runbook_url: "https://github.com/abdoElHodaky/Iacdash-/blob/main/docs/runbooks/slow-deployments.md"
+
+    # Resource Utilization Alerts
+    - alert: HighCPUUtilization
+      expr: sum(rate(container_cpu_usage_seconds_total{namespace="istio-system"}[5m])) by (pod) > 0.8
+      for: 5m
+      labels:
+        severity: warning
+        slo: performance
+      annotations:
+        summary: "High CPU utilization in istio-system"
+        description: "Pod {{ $labels.pod }} CPU utilization is {{ $value | humanizePercentage }}"
+        runbook_url: "https://github.com/abdoElHodaky/Iacdash-/blob/main/docs/runbooks/high-cpu.md"
+
+    - alert: HighMemoryUtilization
+      expr: (sum(container_memory_usage_bytes{namespace="istio-system"}) by (pod) / sum(container_spec_memory_limit_bytes{namespace="istio-system"}) by (pod)) > 0.8
+      for: 5m
+      labels:
+        severity: warning
+        slo: performance
+      annotations:
+        summary: "High memory utilization in istio-system"
+        description: "Pod {{ $labels.pod }} memory utilization is {{ $value | humanizePercentage }}"
+        runbook_url: "https://github.com/abdoElHodaky/Iacdash-/blob/main/docs/runbooks/high-memory.md"
+
+  - name: cost.rules
+    interval: 1h
+    rules:
+    # Cost Optimization SLO (30% savings target)
+    - alert: HighInfrastructureCost
+      expr: sum(kube_node_info) * 100 > 1000  # Example: Alert if more than 10 nodes (adjust based on your baseline)
+      for: 30m
+      labels:
+        severity: warning
+        slo: cost
+      annotations:
+        summary: "Infrastructure cost is above target"
+        description: "Current node count is {{ $value }}, which may indicate cost optimization opportunities"
+        runbook_url: "https://github.com/abdoElHodaky/Iacdash-/blob/main/docs/runbooks/cost-optimization.md"
+
+    - alert: UnderutilizedResources
+      expr: avg_over_time(sum(rate(container_cpu_usage_seconds_total[5m]))[24h:1h]) < 0.3
+      for: 2h
+      labels:
+        severity: info
+        slo: cost
+      annotations:
+        summary: "Resources are underutilized"
+        description: "Average CPU utilization is {{ $value | humanizePercentage }}, consider rightsizing"
+        runbook_url: "https://github.com/abdoElHodaky/Iacdash-/blob/main/docs/runbooks/resource-optimization.md"
+

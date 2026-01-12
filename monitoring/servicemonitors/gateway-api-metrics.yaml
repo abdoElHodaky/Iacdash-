@@ -1,0 +1,79 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: gateway-api-metrics
+  namespace: monitoring
+  labels:
+    app: gateway-api
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: istio-proxy
+  endpoints:
+  - port: http-monitoring
+    interval: 30s
+    path: /stats/prometheus
+    scheme: http
+  namespaceSelector:
+    matchNames:
+    - istio-ingress
+    - istio-system
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: istio-mesh-metrics
+  namespace: monitoring
+  labels:
+    app: istio-mesh
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: istiod
+  endpoints:
+  - port: http-monitoring
+    interval: 15s
+    path: /metrics
+    scheme: http
+  namespaceSelector:
+    matchNames:
+    - istio-system
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: application-metrics
+  namespace: monitoring
+  labels:
+    app: applications
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      monitoring: "enabled"
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+    scheme: http
+  namespaceSelector:
+    any: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: istio-proxy-metrics
+  namespace: istio-ingress
+  labels:
+    app: istio-proxy
+spec:
+  selector:
+    app: istio-proxy
+  ports:
+  - name: http-monitoring
+    port: 15090
+    targetPort: 15090
+    protocol: TCP
+

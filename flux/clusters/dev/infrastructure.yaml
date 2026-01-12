@@ -1,0 +1,48 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: infrastructure
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./flux/infrastructure
+  prune: true
+  wait: true
+  timeout: 5m0s
+  dependsOn:
+    - name: flux-system
+  healthChecks:
+    - apiVersion: source.toolkit.fluxcd.io/v1beta2
+    kind: HelmRepository
+    name: istio
+    namespace: istio-system
+    - apiVersion: source.toolkit.fluxcd.io/v1beta2
+      kind: HelmRepository
+      name: prometheus-community
+      namespace: monitoring
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: apps
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./flux/apps/overlays/dev
+  prune: true
+  wait: true
+  timeout: 5m0s
+  dependsOn:
+    - name: infrastructure
+  postBuild:
+    substitute:
+      cluster_env: "dev"
+      cluster_region: "us-east"
+      istio_version: "1.20.1"
+      monitoring_retention: "7d"

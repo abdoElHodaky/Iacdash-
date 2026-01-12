@@ -1,0 +1,375 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: tempo
+  namespace: flux-system
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: tempo
+      version: "1.7.1"
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # Tempo configuration
+    tempo:
+      # Repository configuration
+      repository: grafana/tempo
+      tag: 2.3.1
+      pullPolicy: IfNotPresent
+      
+      # Resources
+      resources:
+        requests:
+          cpu: 500m
+          memory: 1Gi
+        limits:
+          cpu: 2000m
+          memory: 4Gi
+      
+      # Configuration
+      config: |
+        server:
+          http_listen_port: 3200
+          log_level: info
+        
+        distributor:
+          receivers:
+            jaeger:
+              protocols:
+                thrift_http:
+                  endpoint: 0.0.0.0:14268
+                grpc:
+                  endpoint: 0.0.0.0:14250
+                thrift_binary:
+                  endpoint: 0.0.0.0:6832
+                thrift_compact:
+                  endpoint: 0.0.0.0:6831
+            zipkin:
+              endpoint: 0.0.0.0:9411
+            otlp:
+              protocols:
+                http:
+                  endpoint: 0.0.0.0:4318
+                grpc:
+                  endpoint: 0.0.0.0:4317
+            opencensus:
+              endpoint: 0.0.0.0:55678
+        
+        ingester:
+          max_block_duration: 5m
+          max_block_bytes: 1_000_000
+          complete_block_timeout: 10m
+        
+        compactor:
+          compaction:
+            block_retention: 1h
+        
+        metrics_generator:
+          registry:
+            external_labels:
+              source: tempo
+              cluster: dev
+          storage:
+            path: /var/tempo/generator/wal
+            remote_write:
+            - url: http://prometheus-kube-prometheus-prometheus.monitoring:9090/api/v1/write
+              send_exemplars: true
+        
+        storage:
+          trace:
+            backend: local
+            wal:
+              path: /var/tempo/wal
+            local:
+              path: /var/tempo/blocks
+            pool:
+              max_workers: 100
+              queue_depth: 10000
+        
+        querier:
+          frontend_worker:
+            frontend_address: tempo-query-frontend:9095
+        
+        query_frontend:
+          search:
+            duration_slo: 5s
+            throughput_bytes_slo: 1.073741824e+09
+          trace_by_id:
+            duration_slo: 5s
+        
+        overrides:
+          defaults:
+            metrics_generator:
+              processors: [service-graphs, span-metrics]
+    
+    # Service configuration
+    service:
+      type: ClusterIP
+      port: 3200
+      annotations: {}
+    
+    # ServiceMonitor for Prometheus
+    serviceMonitor:
+      enabled: true
+      namespace: monitoring
+      labels:
+        app: tempo
+        release: prometheus
+      interval: 30s
+      scrapeTimeout: 10s
+    
+    # Persistence
+    persistence:
+      enabled: true
+      size: 50Gi
+      storageClassName: ""  # Use default storage class
+      accessModes:
+      - ReadWriteOnce
+    
+    # Security context
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 10001
+      runAsGroup: 10001
+      fsGroup: 10001
+    
+    # Pod security context
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 10001
+      runAsGroup: 10001
+      fsGroup: 10001
+    
+    # Node selector
+    nodeSelector: {}
+    
+    # Tolerations
+    tolerations: []
+    
+    # Affinity
+    affinity: {}
+    
+    # Extra environment variables
+    extraEnv: []
+    
+    # Extra volumes
+    extraVolumes: []
+    
+    # Extra volume mounts
+    extraVolumeMounts: []
+---
+# Tempo Query Frontend
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: tempo-query-frontend
+  namespace: flux-system
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: tempo
+      version: "1.7.1"
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # Override for query frontend
+    tempo:
+      repository: grafana/tempo-query
+      tag: 2.3.1
+      
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+      
+      config: |
+        backend: tempo:3200
+    
+    service:
+      type: ClusterIP
+      port: 16686  # Jaeger UI port
+    
+    # Disable persistence for query frontend
+    persistence:
+      enabled: false
+---
+# OpenTelemetry Collector for trace collection
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: monitoring
+data:
+  config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+      jaeger:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:14250
+          thrift_http:
+            endpoint: 0.0.0.0:14268
+          thrift_compact:
+            endpoint: 0.0.0.0:6831
+          thrift_binary:
+            endpoint: 0.0.0.0:6832
+      zipkin:
+        endpoint: 0.0.0.0:9411
+    
+    processors:
+      batch:
+        timeout: 1s
+        send_batch_size: 1024
+      memory_limiter:
+        limit_mib: 512
+    
+    exporters:
+      otlp:
+        endpoint: tempo.monitoring.svc.cluster.local:4317
+        tls:
+          insecure: true
+      logging:
+        loglevel: debug
+    
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp, jaeger, zipkin]
+          processors: [memory_limiter, batch]
+          exporters: [otlp, logging]
+      
+      extensions: []
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  namespace: monitoring
+  labels:
+    app: otel-collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+    spec:
+      containers:
+      - name: otel-collector
+        image: otel/opentelemetry-collector-contrib:0.89.0
+        command:
+        - /otelcol-contrib
+        - --config=/etc/otel-collector-config/config.yaml
+        ports:
+        - containerPort: 4317   # OTLP gRPC
+        - containerPort: 4318   # OTLP HTTP
+        - containerPort: 14250  # Jaeger gRPC
+        - containerPort: 14268  # Jaeger HTTP
+        - containerPort: 6831   # Jaeger Thrift Compact
+        - containerPort: 6832   # Jaeger Thrift Binary
+        - containerPort: 9411   # Zipkin
+        - containerPort: 8888   # Metrics
+        volumeMounts:
+        - name: config
+          mountPath: /etc/otel-collector-config
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 13133
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 13133
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: config
+        configMap:
+          name: otel-collector-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  namespace: monitoring
+  labels:
+    app: otel-collector
+spec:
+  selector:
+    app: otel-collector
+  ports:
+  - name: otlp-grpc
+    port: 4317
+    targetPort: 4317
+    protocol: TCP
+  - name: otlp-http
+    port: 4318
+    targetPort: 4318
+    protocol: TCP
+  - name: jaeger-grpc
+    port: 14250
+    targetPort: 14250
+    protocol: TCP
+  - name: jaeger-http
+    port: 14268
+    targetPort: 14268
+    protocol: TCP
+  - name: jaeger-compact
+    port: 6831
+    targetPort: 6831
+    protocol: UDP
+  - name: jaeger-binary
+    port: 6832
+    targetPort: 6832
+    protocol: UDP
+  - name: zipkin
+    port: 9411
+    targetPort: 9411
+    protocol: TCP
+  - name: metrics
+    port: 8888
+    targetPort: 8888
+    protocol: TCP
+  type: ClusterIP
+

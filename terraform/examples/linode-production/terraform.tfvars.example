@@ -1,0 +1,82 @@
+# Linode Production Cluster Configuration
+# Copy this file to terraform.tfvars and customize
+
+# Linode API token (get from https://cloud.linode.com/profile/tokens)
+linode_token = "your-linode-api-token-here"
+
+# Cluster configuration
+cluster_name       = "gateway-production"
+region            = "us-east"
+kubernetes_version = "1.28"
+
+# Production node pools with autoscaling
+node_pools = [
+  {
+    type  = "g6-standard-4"  # 2 vCPU, 8GB RAM
+    count = 3
+    autoscaler = {
+      min = 2
+      max = 10
+    }
+  }
+]
+
+# High availability control plane with ACL
+control_plane_acl = {
+  high_availability = true
+  acl = {
+    enabled = true
+    addresses = [
+      {
+        # Replace with your office/VPN IP ranges
+        ipv4 = ["203.0.113.0/24", "198.51.100.0/24"]
+      }
+    ]
+  }
+}
+
+# Resource tags
+tags = ["gateway-api", "istio", "production", "terraform", "company-name"]
+
+# Service mesh configuration
+install_istio = true
+istio_version = "1.20.1"
+
+# Production monitoring configuration
+install_monitoring        = true
+prometheus_stack_version  = "55.5.0"
+prometheus_retention      = "90d"
+prometheus_storage_size   = "100Gi"
+grafana_admin_password    = "secure-production-password"
+grafana_storage_size      = "20Gi"
+
+# Alternative configurations:
+
+# Cost-optimized configuration
+# node_pools = [
+#   {
+#     type  = "g6-standard-2"  # 1 vCPU, 4GB RAM
+#     count = 2
+#     autoscaler = {
+#       min = 1
+#       max = 5
+#     }
+#   }
+# ]
+# prometheus_retention = "30d"
+# prometheus_storage_size = "50Gi"
+
+# High-performance configuration
+# node_pools = [
+#   {
+#     type  = "g6-standard-8"  # 4 vCPU, 16GB RAM
+#     count = 5
+#     autoscaler = {
+#       min = 3
+#       max = 20
+#     }
+#   }
+# ]
+# prometheus_retention = "180d"
+# prometheus_storage_size = "200Gi"
+
