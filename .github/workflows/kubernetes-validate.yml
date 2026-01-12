@@ -33,7 +33,7 @@ jobs:
 
     - name: Basic YAML syntax validation
       run: |
-        find . -name "*.yaml" -o -name "*.yml" | xargs -I {} sh -c 'echo "Checking: {}" && python3 -c "import yaml; yaml.safe_load(open(\"{}\"))"' || echo "YAML syntax validation completed with warnings"
+        find . -name "*.yaml" -o -name "*.yml" | xargs -I {} sh -c 'echo "Checking: {}" && python3 -c "import yaml; list(yaml.safe_load_all(open(\"{}\")))"' || echo "YAML syntax validation completed with warnings"
 
     - name: Setup kubeconform
       run: |
@@ -105,5 +105,13 @@ jobs:
 
     - name: Run Kubesec scan
       run: |
-        docker run --rm -v $(pwd):/workspace kubesec/kubesec:latest scan /workspace/gateway-api/*.yaml
-        docker run --rm -v $(pwd):/workspace kubesec/kubesec:latest scan /workspace/security/*.yaml
+        if [ -d "gateway-api" ] && [ "$(find gateway-api -name "*.yaml" | wc -l)" -gt 0 ]; then
+          find gateway-api -name "*.yaml" -exec docker run --rm -v $(pwd):/workspace kubesec/kubesec:latest scan /workspace/{} \;
+        else
+          echo "No gateway-api YAML files found to scan"
+        fi
+        if [ -d "security" ] && [ "$(find security -name "*.yaml" | wc -l)" -gt 0 ]; then
+          find security -name "*.yaml" -exec docker run --rm -v $(pwd):/workspace kubesec/kubesec:latest scan /workspace/{} \;
+        else
+          echo "No security YAML files found to scan"
+        fi

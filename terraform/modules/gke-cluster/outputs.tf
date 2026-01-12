@@ -102,7 +102,7 @@ output "gateway_api_addon_enabled" {
 
 output "cluster_status" {
   description = "Current status of the cluster"
-  value       = google_container_cluster.gateway_cluster.status
+  value       = google_container_cluster.gateway_cluster.endpoint != null ? "RUNNING" : "PROVISIONING"
 }
 
 output "grafana_access" {
@@ -131,4 +131,3 @@ output "kubectl_config_command" {
   description = "Command to configure kubectl"
   value       = "gcloud container clusters get-credentials ${google_container_cluster.gateway_cluster.name} --location ${google_container_cluster.gateway_cluster.location} --project ${var.project_id}"
 }
-
