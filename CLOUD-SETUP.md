@@ -2,6 +2,93 @@
 
 Deploy Gateway API and Service Mesh infrastructure to Linode, Google Cloud, OpenStack, or local KinD.
 
+## **🌐 Multi-Cloud Architecture Overview**
+
+```mermaid
+graph TB
+    subgraph "Cloud Providers"
+        Linode[Linode LKE<br/>Cost-Effective]
+        GCP[Google GKE<br/>Advanced Features]
+        OpenStack[OpenStack<br/>Private Cloud]
+        KinD[KinD<br/>Local Development]
+    end
+    
+    subgraph "Terraform Modules"
+        TF_Linode[linode-lke]
+        TF_GCP[gke-cluster]
+        TF_OpenStack[openstack-cluster]
+        TF_KinD[kind-cluster]
+    end
+    
+    subgraph "Common Platform Layer"
+        Gateway[Gateway API v1]
+        ServiceMesh[Service Mesh]
+        Monitoring[Observability]
+        Security[Security Policies]
+    end
+    
+    subgraph "Storage Solutions"
+        LinodeStorage[Linode Block Storage]
+        GCPStorage[GCP Persistent Disks]
+        OpenStackStorage[Cinder Volumes]
+        LocalStorage[Local Volumes]
+    end
+    
+    Linode --> TF_Linode
+    GCP --> TF_GCP
+    OpenStack --> TF_OpenStack
+    KinD --> TF_KinD
+    
+    TF_Linode --> Gateway
+    TF_GCP --> Gateway
+    TF_OpenStack --> Gateway
+    TF_KinD --> Gateway
+    
+    Gateway --> ServiceMesh
+    ServiceMesh --> Monitoring
+    Monitoring --> Security
+    
+    TF_Linode --> LinodeStorage
+    TF_GCP --> GCPStorage
+    TF_OpenStack --> OpenStackStorage
+    TF_KinD --> LocalStorage
+    
+    style Linode fill:#e1f5fe
+    style GCP fill:#f3e5f5
+    style OpenStack fill:#e8f5e8
+    style KinD fill:#fff3e0
+```
+
+## **🏗️ Deployment Decision Matrix**
+
+```ascii
+┌─────────────────────────────────────────────────────────────────┐
+│                    CLOUD PROVIDER COMPARISON                   │
+├─────────────────┬─────────────┬─────────────┬─────────────────┤
+│    Provider     │   Use Case  │    Cost     │   Complexity    │
+├─────────────────┼─────────────┼─────────────┼─────────────────┤
+│  Linode LKE     │ Production  │    Low      │     Simple      │
+│  • Simple setup │ • SMB/Startup│ • $30/month │ • 5 min setup  │
+│  • Great support│ • Regional  │ • Predictable│ • Auto-scaling │
+│  • Block storage│ • Cost-opt  │ • No hidden │ • HA available │
+├─────────────────┼─────────────┼─────────────┼─────────────────┤
+│  Google GKE     │ Enterprise  │   Medium    │    Advanced     │
+│  • Gateway API  │ • Global    │ • $100/month│ • Complex IAM   │
+│  • Workload ID  │ • AI/ML     │ • Usage-based│ • Many options │
+│  • Advanced net │ • Compliance│ • Credits   │ • Learning curve│
+├─────────────────┼─────────────┼─────────────┼─────────────────┤
+│  OpenStack      │ Private     │   Variable  │      High       │
+│  • Full control │ • On-premise│ • Hardware  │ • Expert needed │
+│  • Compliance   │ • Regulated │ • OpEx/CapEx│ • Custom setup  │
+│  • Customizable │ • Security  │ • Licensing │ • Maintenance   │
+├─────────────────┼─────────────┼─────────────┼─────────────────┤
+│  KinD (Local)   │ Development │    Free     │     Minimal     │
+│  • Local dev    │ • Testing   │ • No cost   │ • Docker only   │
+│  • CI/CD        │ • Learning  │ • Local HW  │ • Quick start   │
+│  • Prototyping  │ • Demos     │ • No limits │ • Full features │
+└─────────────────┴─────────────┴─────────────┴─────────────────┘
+```
+
 ---
 
 ## 🔵 Linode LKE

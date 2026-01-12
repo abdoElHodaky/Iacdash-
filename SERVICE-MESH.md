@@ -28,6 +28,131 @@ A service mesh provides:
 - **Observability**: Metrics, logs, and distributed tracing
 - **Traffic Management**: Load balancing, retries, circuit breaking
 - **Resilience**: Fault injection, timeouts, rate limiting
+
+### **🏗️ Service Mesh Architecture**
+
+```mermaid
+graph TB
+    subgraph "Control Plane"
+        Istiod[Istiod<br/>Control Plane]
+        Pilot[Pilot<br/>Service Discovery]
+        Citadel[Citadel<br/>Certificate Authority]
+        Galley[Galley<br/>Configuration]
+    end
+    
+    subgraph "Data Plane"
+        subgraph "Pod A"
+            AppA[Application A]
+            ProxyA[Envoy Proxy]
+        end
+        
+        subgraph "Pod B"
+            AppB[Application B]
+            ProxyB[Envoy Proxy]
+        end
+        
+        subgraph "Pod C"
+            AppC[Application C]
+            ProxyC[Envoy Proxy]
+        end
+    end
+    
+    subgraph "Ingress Gateway"
+        IGW[Istio Gateway]
+        IGWProxy[Envoy Proxy]
+    end
+    
+    Istiod --> ProxyA
+    Istiod --> ProxyB
+    Istiod --> ProxyC
+    Istiod --> IGWProxy
+    
+    AppA --> ProxyA
+    AppB --> ProxyB
+    AppC --> ProxyC
+    IGW --> IGWProxy
+    
+    ProxyA -.->|mTLS| ProxyB
+    ProxyB -.->|mTLS| ProxyC
+    IGWProxy -.->|mTLS| ProxyA
+    
+    style Istiod fill:#e1f5fe
+    style ProxyA fill:#f3e5f5
+    style ProxyB fill:#f3e5f5
+    style ProxyC fill:#f3e5f5
+    style IGWProxy fill:#e8f5e8
+```
+
+### **🔒 Zero-Trust Security Model**
+
+```ascii
+┌─────────────────────────────────────────────────────────────────┐
+│                    ZERO-TRUST ARCHITECTURE                     │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────┐     ┌─────────────────────────────────────┐    │
+│  │   Client    │────▶│         Ingress Gateway            │    │
+│  │ (External)  │     │  • TLS Termination                 │    │
+│  └─────────────┘     │  • Authentication                  │    │
+│         │             │  • Authorization                   │    │
+│         ▼             └─────────────────────────────────────┘    │
+│  ┌─────────────┐                        │                      │
+│  │ Certificate │                        ▼                      │
+│  │ Validation  │     ┌─────────────────────────────────────┐    │
+│  │ (Let's Encrypt)   │         Service Mesh               │    │
+│  └─────────────┘     │  ┌─────────┐    ┌─────────────┐    │    │
+│                      │  │Service A│◄──►│  Service B  │    │    │
+│                      │  │ + Proxy │    │  + Proxy    │    │    │
+│                      │  └─────────┘    └─────────────┘    │    │
+│                      │         │              │          │    │
+│                      │         ▼              ▼          │    │
+│                      │  ┌─────────────────────────────┐  │    │
+│                      │  │      mTLS Encryption       │  │    │
+│                      │  │  • Auto Certificate Mgmt   │  │    │
+│                      │  │  • Identity Verification   │  │    │
+│                      │  │  • Policy Enforcement      │  │    │
+│                      │  └─────────────────────────────┘  │    │
+│                      └─────────────────────────────────────┘    │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │                 POLICY LAYERS                           │    │
+│  │  1. Network Policies (L3/L4)                           │    │
+│  │  2. Authorization Policies (L7)                        │    │
+│  │  3. OPA Policies (Business Logic)                      │    │
+│  │  4. RBAC (Role-Based Access)                           │    │
+│  └─────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### **📊 Traffic Management Flow**
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant IG as Istio Gateway
+    participant VS as VirtualService
+    participant DR as DestinationRule
+    participant SA as Service A v1
+    participant SB as Service A v2
+    
+    C->>IG: HTTP Request
+    IG->>VS: Route based on rules
+    VS->>DR: Apply traffic policy
+    
+    alt 90% traffic
+        DR->>SA: Route to v1
+        SA->>DR: Response
+    else 10% traffic
+        DR->>SB: Route to v2 (canary)
+        SB->>DR: Response
+    end
+    
+    DR->>VS: Response with metrics
+    VS->>IG: Response
+    IG->>C: HTTP Response
+    
+    Note over SA,SB: mTLS encryption<br/>Circuit breaking<br/>Retry logic
+```
 - **Policy Enforcement**: Authorization, access control
 
 ### Architecture
