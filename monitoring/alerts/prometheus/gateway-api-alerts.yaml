@@ -1,0 +1,127 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: gateway-api-alerts
+  namespace: monitoring
+  labels:
+    app: gateway-api
+    release: prometheus
+spec:
+  groups:
+  - name: gateway-api.rules
+    interval: 30s
+    rules:
+    - alert: GatewayAPIHighErrorRate
+      expr: |
+        (
+          sum(rate(istio_requests_total{source_app="istio-proxy",response_code=~"5.*"}[5m])) /
+          sum(rate(istio_requests_total{source_app="istio-proxy"}[5m]))
+        ) * 100 > 5
+      for: 2m
+      labels:
+        severity: warning
+        component: gateway-api
+      annotations:
+        summary: "Gateway API high error rate detected"
+        description: "Gateway API error rate is {{ $value }}% which is above the 5% threshold"
+        runbook_url: "https://github.com/abdoElHodaky/Iacdash-/blob/main/troubleshooting_guide.md#high-error-rate"
+
+    - alert: GatewayAPIHighLatency
+      expr: |
+        histogram_quantile(0.99,
+          sum(rate(istio_request_duration_milliseconds_bucket{source_app="istio-proxy"}[5m])) by (le)
+        ) > 1000
+      for: 5m
+      labels:
+        severity: warning
+        component: gateway-api
+      annotations:
+        summary: "Gateway API high latency detected"
+        description: "Gateway API P99 latency is {{ $value }}ms which is above the 1000ms threshold"
+        runbook_url: "https://github.com/abdoElHodaky/Iacdash-/blob/main/troubleshooting_guide.md#high-latency"
+
+    - alert: GatewayAPILowThroughput
+      expr: |
+        sum(rate(istio_requests_total{source_app="istio-proxy"}[5m])) < 1
+      for: 10m
+      labels:
+        severity: info
+        component: gateway-api
+      annotations:
+        summary: "Gateway API low throughput detected"
+        description: "Gateway API request rate is {{ $value }} req/s which is below expected levels"
+
+    - alert: GatewayDown
+      expr: |
+        up{job=~".*gateway.*"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        component: gateway-api
+      annotations:
+        summary: "Gateway instance is down"
+        description: "Gateway instance {{ $labels.instance }} has been down for more than 1 minute"
+        runbook_url: "https://github.com/abdoElHodaky/Iacdash-/blob/main/troubleshooting_guide.md#gateway-down"
+
+    - alert: IstioControlPlaneDown
+      expr: |
+        up{job="istiod"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        component: istio
+      annotations:
+        summary: "Istio control plane is down"
+        description: "Istio control plane (istiod) has been down for more than 1 minute"
+        runbook_url: "https://github.com/abdoElHodaky/Iacdash-/blob/main/troubleshooting_guide.md#istio-control-plane-issues"
+
+    - alert: GatewayAPIConfigurationError
+      expr: |
+        increase(pilot_k8s_cfg_events_total{type="Gateway",event="update"}[5m]) > 10
+      for: 2m
+      labels:
+        severity: warning
+        component: gateway-api
+      annotations:
+        summary: "High Gateway API configuration change rate"
+        description: "Gateway configuration is changing frequently ({{ $value }} updates in 5 minutes)"
+
+    - alert: CertificateExpiringSoon
+      expr: |
+        (cert_manager_certificate_expiration_timestamp_seconds - time()) / 86400 < 30
+      for: 1h
+      labels:
+        severity: warning
+        component: certificates
+      annotations:
+        summary: "Certificate expiring soon"
+        description: "Certificate {{ $labels.name }} in namespace {{ $labels.namespace }} expires in {{ $value }} days"
+
+    - alert: GatewayAPIMemoryUsageHigh
+      expr: |
+        (
+          sum(container_memory_working_set_bytes{pod=~".*gateway.*"}) by (pod) /
+          sum(container_spec_memory_limit_bytes{pod=~".*gateway.*"}) by (pod)
+        ) * 100 > 80
+      for: 5m
+      labels:
+        severity: warning
+        component: gateway-api
+      annotations:
+        summary: "Gateway API high memory usage"
+        description: "Gateway pod {{ $labels.pod }} memory usage is {{ $value }}% of limit"
+
+    - alert: GatewayAPICPUUsageHigh
+      expr: |
+        (
+          sum(rate(container_cpu_usage_seconds_total{pod=~".*gateway.*"}[5m])) by (pod) /
+          sum(container_spec_cpu_quota{pod=~".*gateway.*"}) by (pod) * 100000
+        ) * 100 > 80
+      for: 5m
+      labels:
+        severity: warning
+        component: gateway-api
+      annotations:
+        summary: "Gateway API high CPU usage"
+        description: "Gateway pod {{ $labels.pod }} CPU usage is {{ $value }}% of limit"
+

@@ -1,0 +1,188 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Gateway API Overview",
+    "tags": ["gateway-api", "istio", "kubernetes"],
+    "style": "dark",
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Gateway API Request Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(istio_requests_total{source_app=\"istio-proxy\"}[5m]))",
+            "legendFormat": "Requests/sec"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 100},
+                {"color": "red", "value": 1000}
+              ]
+            },
+            "unit": "reqps"
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Gateway API Success Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(istio_requests_total{source_app=\"istio-proxy\",response_code!~\"5.*\"}[5m])) / sum(rate(istio_requests_total{source_app=\"istio-proxy\"}[5m])) * 100",
+            "legendFormat": "Success Rate"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 95},
+                {"color": "green", "value": 99}
+              ]
+            },
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Gateway API P99 Latency",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(istio_request_duration_milliseconds_bucket{source_app=\"istio-proxy\"}[5m])) by (le))",
+            "legendFormat": "P99 Latency"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 100},
+                {"color": "red", "value": 500}
+              ]
+            },
+            "unit": "ms"
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0}
+      },
+      {
+        "id": 4,
+        "title": "Active Gateways",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "count(kube_pod_info{pod=~\".*gateway.*\", phase=\"Running\"})",
+            "legendFormat": "Active Gateways"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 1},
+                {"color": "green", "value": 2}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0}
+      },
+      {
+        "id": 5,
+        "title": "Request Rate by Gateway",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum(rate(istio_requests_total{source_app=\"istio-proxy\"}[5m])) by (destination_service_name)",
+            "legendFormat": "{{destination_service_name}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "reqps"
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "id": 6,
+        "title": "Response Codes Distribution",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "sum(rate(istio_requests_total{source_app=\"istio-proxy\"}[5m])) by (response_code)",
+            "legendFormat": "{{response_code}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+      },
+      {
+        "id": 7,
+        "title": "Gateway Resource Usage",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum(rate(container_cpu_usage_seconds_total{pod=~\".*gateway.*\"}[5m])) by (pod)",
+            "legendFormat": "CPU - {{pod}}"
+          },
+          {
+            "expr": "sum(container_memory_working_set_bytes{pod=~\".*gateway.*\"}) by (pod) / 1024 / 1024",
+            "legendFormat": "Memory - {{pod}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16}
+      }
+    ]
+  }
+}
+
