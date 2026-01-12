@@ -1,0 +1,178 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: wasm-header-transform
+  namespace: istio-ingress
+  labels:
+    app: gateway-api
+    component: transformation
+spec:
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: GATEWAY
+      listener:
+        filterChain:
+          filter:
+            name: "envoy.filters.network.http_connection_manager"
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: envoy.filters.http.wasm
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm
+          config:
+            name: "header_transform"
+            root_id: "header_transform"
+            vm_config:
+              vm_id: "header_transform"
+              runtime: "envoy.wasm.runtime.v8"
+              code:
+                # For production, build and host the WASM binary
+                # cargo build --target wasm32-unknown-unknown --release
+                remote:
+                  http_uri:
+                    uri: "https://github.com/abdoElHodaky/Iacdash-/releases/download/v1.0.0/header-transform.wasm"
+                    cluster: "wasm-cluster"
+                    timeout: 10s
+                  sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: wasm-body-transform
+  namespace: default
+  labels:
+    app: gateway-api
+    component: transformation
+spec:
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: SIDECAR_INBOUND
+      listener:
+        filterChain:
+          filter:
+            name: "envoy.filters.network.http_connection_manager"
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: envoy.filters.http.wasm
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm
+          config:
+            name: "body_transform"
+            root_id: "body_transform"
+            vm_config:
+              vm_id: "body_transform"
+              runtime: "envoy.wasm.runtime.v8"
+              code:
+                remote:
+                  http_uri:
+                    uri: "https://github.com/abdoElHodaky/Iacdash-/releases/download/v1.0.0/body-transform.wasm"
+                    cluster: "wasm-cluster"
+                    timeout: 10s
+                  sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+---
+# WASM cluster configuration for downloading plugins
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: wasm-cluster
+  namespace: istio-system
+spec:
+  configPatches:
+  - applyTo: CLUSTER
+    patch:
+      operation: ADD
+      value:
+        name: wasm-cluster
+        type: LOGICAL_DNS
+        connect_timeout: 10s
+        lb_policy: ROUND_ROBIN
+        load_assignment:
+          cluster_name: wasm-cluster
+          endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: github.com
+                    port_value: 443
+        transport_socket:
+          name: envoy.transport_sockets.tls
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+            sni: github.com
+---
+# Build script for WASM plugins
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wasm-build-script
+  namespace: default
+data:
+  build.sh: |
+    #!/bin/bash
+    set -e
+    
+    echo "Building WASM plugins..."
+    
+    # Install Rust if not present
+    if ! command -v cargo &> /dev/null; then
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        source ~/.cargo/env
+    fi
+    
+    # Add WASM target
+    rustup target add wasm32-unknown-unknown
+    
+    # Build header transform plugin
+    cd transformations/wasm/header-transform
+    cargo build --target wasm32-unknown-unknown --release
+    cp target/wasm32-unknown-unknown/release/header_transform.wasm ../../../header-transform.wasm
+    
+    # Build body transform plugin
+    cd ../body-transform
+    cargo build --target wasm32-unknown-unknown --release
+    cp target/wasm32-unknown-unknown/release/body_transform.wasm ../../../body-transform.wasm
+    
+    echo "WASM plugins built successfully!"
+    echo "Upload header-transform.wasm and body-transform.wasm to your release assets"
+---
+# Job to build WASM plugins
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wasm-builder
+  namespace: default
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: rust-builder
+        image: rust:1.70
+        command: ["/bin/bash"]
+        args: ["/scripts/build.sh"]
+        volumeMounts:
+        - name: build-script
+          mountPath: /scripts
+        - name: source-code
+          mountPath: /workspace
+        workingDir: /workspace
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+      volumes:
+      - name: build-script
+        configMap:
+          name: wasm-build-script
+          defaultMode: 0755
+      - name: source-code
+        emptyDir: {}
+

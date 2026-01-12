@@ -1,0 +1,218 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: flagger
+  namespace: flux-system
+spec:
+  interval: 24h
+  url: https://flagger.app
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: flagger
+  namespace: flux-system
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: flagger
+      version: "1.32.0"
+      sourceRef:
+        kind: HelmRepository
+        name: flagger
+        namespace: flux-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # Flagger configuration
+    image:
+      repository: ghcr.io/fluxcd/flagger
+      tag: 1.32.0
+    
+    # Enable Istio integration
+    meshProvider: istio
+    
+    # Metrics server configuration
+    metricsServer: http://prometheus-kube-prometheus-prometheus.monitoring:9090
+    
+    # Enable Gateway API support
+    gatewayapi:
+      enabled: true
+    
+    # Resource configuration
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    
+    # RBAC configuration
+    rbac:
+      create: true
+      pspEnabled: false
+    
+    # Service account
+    serviceAccount:
+      create: true
+      name: flagger
+    
+    # Logging configuration
+    logLevel: info
+    
+    # Enable Slack notifications (configure webhook URL)
+    slack:
+      enabled: false
+      url: ""
+      channel: ""
+      username: flagger
+    
+    # Enable Teams notifications
+    msteams:
+      enabled: false
+      url: ""
+    
+    # Canary analysis configuration
+    canary:
+      # Default analysis interval
+      interval: 1m
+      # Default threshold for promotion
+      threshold: 5
+      # Default max weight for canary
+      maxWeight: 50
+      # Default step weight
+      stepWeight: 10
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: flagger-loadtester
+  namespace: flux-system
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: loadtester
+      version: "0.27.0"
+      sourceRef:
+        kind: HelmRepository
+        name: flagger
+        namespace: flux-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # Load tester configuration
+    image:
+      repository: ghcr.io/fluxcd/flagger-loadtester
+      tag: 0.27.0
+    
+    # Service configuration
+    service:
+      type: ClusterIP
+      port: 80
+    
+    # Resource configuration
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+    
+    # Command configuration for load testing
+    cmd:
+      timeout: 1h
+---
+# Flagger Grafana Dashboard ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flagger-grafana-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  flagger-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Flagger Canary Analysis",
+        "tags": ["flagger", "canary", "progressive-delivery"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Canary Success Rate",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "sum(rate(flagger_canary_total{type=\"success\"}[5m])) / sum(rate(flagger_canary_total[5m]))",
+                "legendFormat": "Success Rate",
+                "refId": "A"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "thresholds": {
+                  "steps": [
+                    {"color": "red", "value": null},
+                    {"color": "yellow", "value": 0.8},
+                    {"color": "green", "value": 0.95}
+                  ]
+                },
+                "unit": "percentunit"
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Active Canaries",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "sum(flagger_canary_status{phase=\"progressing\"})",
+                "legendFormat": "Active Canaries",
+                "refId": "A"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Canary Duration",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "flagger_canary_duration_seconds",
+                "legendFormat": "{{name}} - {{namespace}}",
+                "refId": "A"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "refresh": "30s"
+      }
+    }
+
