@@ -1,0 +1,292 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Logs and Traces Correlation Dashboard",
+    "tags": ["loki", "tempo", "observability", "logs", "traces"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Log Volume by Namespace",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(loki_distributor_lines_received_total[5m])) by (namespace)",
+            "legendFormat": "{{namespace}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Lines per second",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Trace Volume by Service",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(tempo_distributor_spans_received_total[5m])) by (service_name)",
+            "legendFormat": "{{service_name}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Spans per second",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Error Logs",
+        "type": "logs",
+        "targets": [
+          {
+            "expr": "{namespace=\"default\"} |= \"error\" or \"ERROR\" or \"Error\"",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showTime": true,
+          "showLabels": true,
+          "showCommonLabels": false,
+          "wrapLogMessage": true,
+          "prettifyLogMessage": false,
+          "enableLogDetails": true,
+          "dedupStrategy": "none",
+          "sortOrder": "Descending"
+        },
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+      },
+      {
+        "id": 4,
+        "title": "Request Latency Distribution",
+        "type": "heatmap",
+        "targets": [
+          {
+            "expr": "sum(rate(tempo_request_duration_seconds_bucket[5m])) by (le)",
+            "legendFormat": "{{le}}",
+            "refId": "A"
+          }
+        ],
+        "heatmap": {
+          "xBucketSize": null,
+          "yBucketSize": null,
+          "yBucketNumber": null
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+      },
+      {
+        "id": 5,
+        "title": "Top Error Traces",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "topk(10, sum(rate(tempo_distributor_spans_received_total{status=\"error\"}[5m])) by (service_name, operation))",
+            "legendFormat": "",
+            "refId": "A"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {},
+              "indexByName": {},
+              "renameByName": {
+                "service_name": "Service",
+                "operation": "Operation",
+                "Value": "Error Rate"
+              }
+            }
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+      },
+      {
+        "id": 6,
+        "title": "Log Ingestion Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(loki_distributor_bytes_received_total[5m]))",
+            "legendFormat": "Bytes/sec",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "binBps",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 1000000},
+                {"color": "red", "value": 10000000}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 24}
+      },
+      {
+        "id": 7,
+        "title": "Trace Ingestion Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(tempo_distributor_spans_received_total[5m]))",
+            "legendFormat": "Spans/sec",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 1000},
+                {"color": "red", "value": 10000}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 24}
+      },
+      {
+        "id": 8,
+        "title": "Storage Usage",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(loki_store_index_entries_per_chunk)",
+            "legendFormat": "Index Entries",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(tempo_ingester_blocks_per_compactor)",
+            "legendFormat": "Trace Blocks",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 100000},
+                {"color": "red", "value": 1000000}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 24}
+      },
+      {
+        "id": 9,
+        "title": "Query Performance",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(loki_request_duration_seconds_bucket{route=\"/loki/api/v1/query_range\"}[5m])) by (le))",
+            "legendFormat": "P95 Log Query",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(tempo_request_duration_seconds_bucket{route=\"/api/traces\"}[5m])) by (le))",
+            "legendFormat": "P95 Trace Query",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 1},
+                {"color": "red", "value": 5}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 24}
+      },
+      {
+        "id": 10,
+        "title": "Correlated Logs and Traces",
+        "type": "logs",
+        "targets": [
+          {
+            "expr": "{namespace=\"istio-system\"} | json | trace_id != \"\"",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showTime": true,
+          "showLabels": true,
+          "showCommonLabels": false,
+          "wrapLogMessage": true,
+          "prettifyLogMessage": true,
+          "enableLogDetails": true,
+          "dedupStrategy": "none",
+          "sortOrder": "Descending"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "displayMode": "list"
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 28}
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "namespace",
+          "type": "query",
+          "query": "label_values(up, namespace)",
+          "refresh": 1,
+          "includeAll": true,
+          "allValue": ".*"
+        },
+        {
+          "name": "service",
+          "type": "query",
+          "query": "label_values(up{namespace=\"$namespace\"}, service)",
+          "refresh": 1,
+          "includeAll": true,
+          "allValue": ".*"
+        }
+      ]
+    },
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "30s"
+  }
+}
+

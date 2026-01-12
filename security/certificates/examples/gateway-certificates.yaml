@@ -1,0 +1,197 @@
+# Example: Gateway API with automatic TLS certificates
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: demo-gateway-tls
+  namespace: istio-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+spec:
+  gatewayClassName: istio
+  listeners:
+  - name: https
+    hostname: demo.example.com
+    port: 443
+    protocol: HTTPS
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - name: demo-tls-cert
+        kind: Secret
+  - name: http
+    hostname: demo.example.com
+    port: 80
+    protocol: HTTP
+---
+# Certificate resource for the Gateway
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: demo-tls-cert
+  namespace: istio-ingress
+spec:
+  secretName: demo-tls-cert
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+  - demo.example.com
+  - api.demo.example.com
+  usages:
+  - digital signature
+  - key encipherment
+  duration: 2160h # 90 days
+  renewBefore: 360h # 15 days before expiry
+---
+# Wildcard certificate for multiple subdomains
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-tls-cert
+  namespace: istio-ingress
+spec:
+  secretName: wildcard-tls-cert
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+  - "*.example.com"
+  usages:
+  - digital signature
+  - key encipherment
+  duration: 2160h # 90 days
+  renewBefore: 360h # 15 days before expiry
+---
+# Internal service certificate (mTLS)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: internal-service-cert
+  namespace: default
+spec:
+  secretName: internal-service-tls
+  issuerRef:
+    name: ca-issuer
+    kind: ClusterIssuer
+  dnsNames:
+  - internal-service.default.svc.cluster.local
+  - internal-service
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+  - client auth
+  duration: 8760h # 1 year
+  renewBefore: 720h # 30 days before expiry
+---
+# HTTPRoute with TLS termination
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: demo-route-tls
+  namespace: default
+spec:
+  parentRefs:
+  - name: demo-gateway-tls
+    namespace: istio-ingress
+  hostnames:
+  - demo.example.com
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: demo-service
+      port: 80
+---
+# Service for the demo application
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-service
+  namespace: default
+spec:
+  selector:
+    app: demo
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+# Demo application deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-app
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: demo
+  template:
+    metadata:
+      labels:
+        app: demo
+    spec:
+      containers:
+      - name: demo
+        image: nginx:alpine
+        ports:
+        - containerPort: 8080
+        env:
+        - name: PORT
+          value: "8080"
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+---
+# Certificate for Istio Gateway (alternative approach)
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: istio-gateway-tls
+  namespace: istio-ingress
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: istio-gateway-cert
+    hosts:
+    - api.example.com
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - api.example.com
+    redirect:
+      httpsRedirect: true
+---
+# Certificate for Istio Gateway
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: istio-gateway-cert
+  namespace: istio-ingress
+spec:
+  secretName: istio-gateway-cert
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+  - api.example.com
+  usages:
+  - digital signature
+  - key encipherment
+

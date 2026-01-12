@@ -1,0 +1,299 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: grafana
+  namespace: flux-system
+spec:
+  interval: 24h
+  url: https://grafana.github.io/helm-charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: loki
+  namespace: flux-system
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: loki
+      version: "5.41.4"
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # Loki configuration
+    loki:
+      # Authentication and authorization
+      auth_enabled: false
+      
+      # Server configuration
+      server:
+        http_listen_port: 3100
+        grpc_listen_port: 9095
+        log_level: info
+      
+      # Common configuration
+      common:
+        path_prefix: /var/loki
+        storage:
+          filesystem:
+            chunks_directory: /var/loki/chunks
+            rules_directory: /var/loki/rules
+        replication_factor: 1
+        ring:
+          instance_addr: 127.0.0.1
+          kvstore:
+            store: inmemory
+      
+      # Schema configuration
+      schema_config:
+        configs:
+        - from: 2020-10-24
+          store: boltdb-shipper
+          object_store: filesystem
+          schema: v11
+          index:
+            prefix: index_
+            period: 24h
+      
+      # Storage configuration
+      storage_config:
+        boltdb_shipper:
+          active_index_directory: /var/loki/boltdb-shipper-active
+          cache_location: /var/loki/boltdb-shipper-cache
+          cache_ttl: 24h
+          shared_store: filesystem
+        filesystem:
+          directory: /var/loki/chunks
+      
+      # Limits configuration
+      limits_config:
+        retention_period: 744h  # 31 days
+        enforce_metric_name: false
+        reject_old_samples: true
+        reject_old_samples_max_age: 168h
+        ingestion_rate_mb: 16
+        ingestion_burst_size_mb: 32
+        max_streams_per_user: 10000
+        max_line_size: 256000
+        max_entries_limit_per_query: 5000
+        max_global_streams_per_user: 5000
+        max_query_parallelism: 32
+        max_query_series: 1000
+        cardinality_limit: 100000
+        max_streams_matchers_per_query: 1000
+        max_concurrent_tail_requests: 10
+        max_cache_freshness_per_query: 10m
+        split_queries_by_interval: 15m
+      
+      # Chunk store configuration
+      chunk_store_config:
+        max_look_back_period: 0s
+      
+      # Table manager configuration
+      table_manager:
+        retention_deletes_enabled: true
+        retention_period: 744h  # 31 days
+      
+      # Query range configuration
+      query_range:
+        results_cache:
+          cache:
+            embedded_cache:
+              enabled: true
+              max_size_mb: 100
+      
+      # Frontend configuration
+      frontend:
+        log_queries_longer_than: 5s
+        compress_responses: true
+        max_outstanding_per_tenant: 2048
+      
+      # Query scheduler configuration
+      query_scheduler:
+        max_outstanding_requests_per_tenant: 2048
+      
+      # Ruler configuration
+      ruler:
+        alertmanager_url: http://prometheus-kube-prometheus-alertmanager.monitoring:9093
+        storage:
+          type: local
+          local:
+            directory: /var/loki/rules
+        rule_path: /var/loki/rules
+        ring:
+          kvstore:
+            store: inmemory
+        enable_api: true
+        enable_alertmanager_v2: true
+    
+    # Deployment configuration
+    deploymentMode: SingleBinary
+    
+    # Single binary configuration
+    singleBinary:
+      replicas: 1
+      resources:
+        requests:
+          cpu: 500m
+          memory: 1Gi
+        limits:
+          cpu: 2000m
+          memory: 4Gi
+      persistence:
+        enabled: true
+        size: 50Gi
+        storageClass: ""  # Use default storage class
+      extraEnv:
+      - name: JAEGER_AGENT_HOST
+        value: tempo.monitoring.svc.cluster.local
+      - name: JAEGER_AGENT_PORT
+        value: "6831"
+    
+    # Gateway configuration (nginx)
+    gateway:
+      enabled: true
+      replicas: 1
+      image:
+        registry: docker.io
+        repository: nginxinc/nginx-unprivileged
+        tag: 1.25-alpine
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
+      service:
+        type: ClusterIP
+        port: 80
+    
+    # Test configuration
+    test:
+      enabled: false
+    
+    # Monitoring configuration
+    monitoring:
+      serviceMonitor:
+        enabled: true
+        namespace: monitoring
+        labels:
+          app: loki
+          release: prometheus
+        interval: 30s
+        scrapeTimeout: 10s
+      
+      selfMonitoring:
+        enabled: true
+        grafanaAgent:
+          installOperator: false
+    
+    # Grafana Agent for log collection
+    grafana-agent:
+      enabled: false  # We'll use Promtail instead
+    
+    # Promtail for log collection
+    promtail:
+      enabled: true
+      config:
+        logLevel: info
+        serverPort: 3101
+        clients:
+        - url: http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push
+        positions:
+          filename: /tmp/positions.yaml
+        scrape_configs:
+        - job_name: kubernetes-pods
+          kubernetes_sd_configs:
+          - role: pod
+          pipeline_stages:
+          - cri: {}
+          relabel_configs:
+          - source_labels:
+            - __meta_kubernetes_pod_controller_name
+            regex: ([0-9a-z-.]+?)(-[0-9a-f]{8,10})?
+            target_label: __tmp_controller_name
+          - source_labels:
+            - __meta_kubernetes_pod_label_app_kubernetes_io_name
+            - __meta_kubernetes_pod_label_app
+            - __tmp_controller_name
+            - __meta_kubernetes_pod_name
+            regex: ^;*([^;]+)(;.*)?$
+            target_label: app
+            replacement: $1
+          - source_labels:
+            - __meta_kubernetes_pod_label_app_kubernetes_io_instance
+            - __meta_kubernetes_pod_label_instance
+            regex: ^;*([^;]+)(;.*)?$
+            target_label: instance
+            replacement: $1
+          - source_labels:
+            - __meta_kubernetes_pod_label_app_kubernetes_io_component
+            - __meta_kubernetes_pod_label_component
+            regex: ^;*([^;]+)(;.*)?$
+            target_label: component
+            replacement: $1
+          - action: replace
+            source_labels:
+            - __meta_kubernetes_pod_node_name
+            target_label: node_name
+          - action: replace
+            source_labels:
+            - __meta_kubernetes_namespace
+            target_label: namespace
+          - action: replace
+            replacement: $1
+            separator: /
+            source_labels:
+            - namespace
+            - app
+            target_label: job
+          - action: replace
+            source_labels:
+            - __meta_kubernetes_pod_name
+            target_label: pod
+          - action: replace
+            source_labels:
+            - __meta_kubernetes_pod_container_name
+            target_label: container
+          - action: replace
+            replacement: /var/log/pods/*$1/*.log
+            separator: /
+            source_labels:
+            - __meta_kubernetes_pod_uid
+            - __meta_kubernetes_pod_container_name
+            target_label: __path__
+          - action: replace
+            regex: true/(.*)
+            replacement: /var/log/pods/*$1/*.log
+            separator: /
+            source_labels:
+            - __meta_kubernetes_pod_annotationpresent_kubernetes_io_config_hash
+            - __meta_kubernetes_pod_annotation_kubernetes_io_config_hash
+            - __meta_kubernetes_pod_container_name
+            target_label: __path__
+      
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+      
+      tolerations:
+      - effect: NoSchedule
+        operator: Exists
+      - effect: NoExecute
+        operator: Exists
+
