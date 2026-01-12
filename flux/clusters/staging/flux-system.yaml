@@ -1,0 +1,106 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: GitRepository
+metadata:
+  name: flux-system
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  ref:
+    branch: main
+  secretRef:
+    name: flux-system
+  url: ssh://git@github.com/abdoElHodaky/Iacdash-
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: flux-system
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  path: ./flux/clusters/staging
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  validation: client
+  healthChecks:
+  - apiVersion: helm.toolkit.fluxcd.io/v2beta1
+    kind: HelmRelease
+    name: prometheus
+    namespace: monitoring
+  - apiVersion: helm.toolkit.fluxcd.io/v2beta1
+    kind: HelmRelease
+    name: istio-base
+    namespace: istio-system
+---
+# Staging-specific infrastructure
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: infrastructure-staging
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  path: ./flux/infrastructure
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  patches:
+  # Staging-specific resource limits
+  - patch: |
+      - op: replace
+        path: /spec/values/resources/requests/memory
+        value: "512Mi"
+      - op: replace
+        path: /spec/values/resources/limits/memory
+        value: "1Gi"
+    target:
+      kind: HelmRelease
+      name: prometheus
+  # Staging-specific replicas
+  - patch: |
+      - op: replace
+        path: /spec/values/replicaCount
+        value: 1
+    target:
+      kind: HelmRelease
+      name: cert-manager
+  # Staging-specific storage
+  - patch: |
+      - op: replace
+        path: /spec/values/persistence/size
+        value: "10Gi"
+    target:
+      kind: HelmRelease
+      name: loki
+  healthChecks:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: cert-manager
+    namespace: cert-manager
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: external-secrets-operator
+    namespace: external-secrets-system
+---
+# Staging applications
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: applications-staging
+  namespace: flux-system
+spec:
+  interval: 5m0s
+  path: ./gitops/environments/staging
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+  - name: infrastructure-staging
+  validation: client
+  timeout: 5m0s
+  retryInterval: 2m0s
+

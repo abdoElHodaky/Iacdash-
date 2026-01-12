@@ -1,0 +1,171 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: GitRepository
+metadata:
+  name: flux-system
+  namespace: flux-system
+spec:
+  interval: 5m0s  # Less frequent checks for production
+  ref:
+    branch: main
+  secretRef:
+    name: flux-system
+  url: ssh://git@github.com/abdoElHodaky/Iacdash-
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: flux-system
+  namespace: flux-system
+spec:
+  interval: 30m0s  # Less frequent reconciliation for production
+  path: ./flux/clusters/production
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  validation: client
+  timeout: 10m0s
+  healthChecks:
+  - apiVersion: helm.toolkit.fluxcd.io/v2beta1
+    kind: HelmRelease
+    name: prometheus
+    namespace: monitoring
+  - apiVersion: helm.toolkit.fluxcd.io/v2beta1
+    kind: HelmRelease
+    name: istio-base
+    namespace: istio-system
+  - apiVersion: helm.toolkit.fluxcd.io/v2beta1
+    kind: HelmRelease
+    name: cert-manager
+    namespace: cert-manager
+---
+# Production infrastructure with high availability
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: infrastructure-production
+  namespace: flux-system
+spec:
+  interval: 30m0s
+  path: ./flux/infrastructure
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  patches:
+  # Production-specific resource limits (higher)
+  - patch: |
+      - op: replace
+        path: /spec/values/resources/requests/memory
+        value: "2Gi"
+      - op: replace
+        path: /spec/values/resources/limits/memory
+        value: "4Gi"
+      - op: replace
+        path: /spec/values/resources/requests/cpu
+        value: "1000m"
+      - op: replace
+        path: /spec/values/resources/limits/cpu
+        value: "2000m"
+    target:
+      kind: HelmRelease
+      name: prometheus
+  # Production-specific replicas (HA)
+  - patch: |
+      - op: replace
+        path: /spec/values/replicaCount
+        value: 3
+    target:
+      kind: HelmRelease
+      name: cert-manager
+  - patch: |
+      - op: replace
+        path: /spec/values/replicaCount
+        value: 2
+    target:
+      kind: HelmRelease
+      name: external-secrets-operator
+  # Production-specific storage (larger)
+  - patch: |
+      - op: replace
+        path: /spec/values/persistence/size
+        value: "100Gi"
+      - op: replace
+        path: /spec/values/singleBinary/persistence/size
+        value: "100Gi"
+    target:
+      kind: HelmRelease
+      name: loki
+  - patch: |
+      - op: replace
+        path: /spec/values/persistence/size
+        value: "100Gi"
+    target:
+      kind: HelmRelease
+      name: tempo
+  # Production-specific retention (longer)
+  - patch: |
+      - op: replace
+        path: /spec/values/loki/limits_config/retention_period
+        value: "2160h"  # 90 days
+    target:
+      kind: HelmRelease
+      name: loki
+  # Production-specific monitoring
+  - patch: |
+      - op: replace
+        path: /spec/values/prometheus/prometheusSpec/retention
+        value: "90d"
+      - op: replace
+        path: /spec/values/prometheus/prometheusSpec/storageSpec/volumeClaimTemplate/spec/resources/requests/storage
+        value: "100Gi"
+    target:
+      kind: HelmRelease
+      name: prometheus
+  healthChecks:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: cert-manager
+    namespace: cert-manager
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: external-secrets-operator
+    namespace: external-secrets-system
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: loki
+    namespace: monitoring
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: tempo
+    namespace: monitoring
+  timeout: 15m0s
+---
+# Production applications with strict validation
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: applications-production
+  namespace: flux-system
+spec:
+  interval: 30m0s
+  path: ./gitops/environments/production
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+  - name: infrastructure-production
+  validation: client
+  timeout: 10m0s
+  retryInterval: 5m0s
+  # Production-specific policies
+  postBuild:
+    substitute:
+      ENVIRONMENT: "production"
+      REPLICA_COUNT: "3"
+      RESOURCE_REQUESTS_CPU: "500m"
+      RESOURCE_REQUESTS_MEMORY: "1Gi"
+      RESOURCE_LIMITS_CPU: "2000m"
+      RESOURCE_LIMITS_MEMORY: "4Gi"
+

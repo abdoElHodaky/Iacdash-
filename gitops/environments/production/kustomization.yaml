@@ -1,0 +1,223 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: production-environment
+  annotations:
+    config.kubernetes.io/local-config: "true"
+
+# Base resources
+resources:
+- namespace.yaml
+- resource-quotas.yaml
+- network-policies.yaml
+- gateway-config.yaml
+- monitoring-config.yaml
+- backup-config.yaml
+- security-policies.yaml
+
+# Production-specific patches
+patches:
+# Production resource requirements (higher)
+- patch: |-
+    - op: replace
+      path: /spec/hard/requests.cpu
+      value: "20"
+    - op: replace
+      path: /spec/hard/requests.memory
+      value: "40Gi"
+    - op: replace
+      path: /spec/hard/limits.cpu
+      value: "40"
+    - op: replace
+      path: /spec/hard/limits.memory
+      value: "80Gi"
+    - op: replace
+      path: /spec/hard/persistentvolumeclaims
+      value: "20"
+    - op: replace
+      path: /spec/hard/requests.storage
+      value: "1Ti"
+  target:
+    kind: ResourceQuota
+    name: production-quota
+
+# Production replicas (HA)
+- patch: |-
+    - op: replace
+      path: /spec/replicas
+      value: 3
+  target:
+    kind: Deployment
+    labelSelector: "tier=frontend"
+
+- patch: |-
+    - op: replace
+      path: /spec/replicas
+      value: 2
+  target:
+    kind: Deployment
+    labelSelector: "tier=backend"
+
+# Production-specific resource limits
+- patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/cpu
+      value: "500m"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/memory
+      value: "1Gi"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/cpu
+      value: "2000m"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/memory
+      value: "4Gi"
+  target:
+    kind: Deployment
+    labelSelector: "environment=production"
+
+# Production security contexts
+- patch: |-
+    - op: add
+      path: /spec/template/spec/securityContext
+      value:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+    - op: add
+      path: /spec/template/spec/containers/0/securityContext
+      value:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+  target:
+    kind: Deployment
+    labelSelector: "environment=production"
+
+# Production affinity rules
+- patch: |-
+    - op: add
+      path: /spec/template/spec/affinity
+      value:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - demo-app
+            topologyKey: kubernetes.io/hostname
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-type
+                operator: In
+                values:
+                - production
+  target:
+    kind: Deployment
+    name: demo-app
+
+# Common labels
+commonLabels:
+  environment: production
+  managed-by: flux
+  cluster: production
+  backup: enabled
+  monitoring: enabled
+
+# Common annotations
+commonAnnotations:
+  config.kubernetes.io/origin: |
+    path: gitops/environments/production/kustomization.yaml
+  flux.weave.works/automated: "false"  # Manual approval for production
+  backup.velero.io/backup-volumes: "data"
+  prometheus.io/scrape: "true"
+
+# Namespace prefix for production
+namespace: production
+
+# Images with production tags (stable versions)
+images:
+- name: demo-app
+  newTag: v1.2.3
+- name: api-service
+  newTag: v2.1.0
+- name: database
+  newTag: 14.9-alpine
+
+# ConfigMap and Secret generators
+configMapGenerator:
+- name: production-config
+  literals:
+  - ENVIRONMENT=production
+  - LOG_LEVEL=info
+  - REPLICA_COUNT=3
+  - ENABLE_DEBUG=false
+  - API_TIMEOUT=10s
+  - CACHE_TTL=3600s
+  - MAX_CONNECTIONS=100
+  - HEALTH_CHECK_INTERVAL=30s
+  - METRICS_ENABLED=true
+  - TRACING_ENABLED=true
+
+secretGenerator:
+- name: production-secrets
+  literals:
+  - DATABASE_URL=postgresql://prod-user:${DATABASE_PASSWORD}@prod-db-cluster:5432/production
+  - REDIS_URL=redis://prod-redis-cluster:6379/0
+  - JWT_SECRET=${JWT_SECRET}
+  - API_KEY=${API_KEY}
+  - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+  type: Opaque
+
+# Replacements for environment-specific values
+replacements:
+- source:
+    kind: ConfigMap
+    name: production-config
+    fieldPath: data.ENVIRONMENT
+  targets:
+  - select:
+      kind: Deployment
+    fieldPaths:
+    - spec.template.spec.containers.[name=app].env.[name=ENVIRONMENT].value
+
+- source:
+    kind: ConfigMap
+    name: production-config
+    fieldPath: data.REPLICA_COUNT
+  targets:
+  - select:
+      kind: Deployment
+      labelSelector: "tier=frontend"
+    fieldPaths:
+    - spec.replicas
+
+- source:
+    kind: ConfigMap
+    name: production-config
+    fieldPath: data.LOG_LEVEL
+  targets:
+  - select:
+      kind: Deployment
+    fieldPaths:
+    - spec.template.spec.containers.[name=app].env.[name=LOG_LEVEL].value
+
+# Generators for production-specific resources
+generators:
+- generators/backup-generator.yaml
+- generators/monitoring-generator.yaml
+- generators/security-generator.yaml
+
