@@ -6,7 +6,7 @@ package gateway.authz
 import rego.v1
 
 # Default deny - all requests are denied unless explicitly allowed
-default allow if false
+default allow = false
 
 # Allow requests that pass all authorization checks
 allow if {

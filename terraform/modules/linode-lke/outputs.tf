@@ -61,13 +61,18 @@ output "grafana_access" {
     url      = "Check LoadBalancer IP: kubectl get svc -n monitoring prometheus-grafana"
     username = "admin"
     password = "[REDACTED]"
-  } : "Not installed"
+  } : {
+    url      = "Not installed"
+    username = null
+    password = null
+  }
 }
 
 output "prometheus_access" {
   description = "Prometheus access information"
   value = var.install_monitoring ? {
     url = "Port-forward: kubectl port-forward -n monitoring svc/prometheus-kube-prometheus-prometheus 9090:9090"
-  } : "Not installed"
+  } : {
+    url = "Not installed"
+  }
 }
-

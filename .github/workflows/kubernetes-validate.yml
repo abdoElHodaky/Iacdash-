@@ -98,6 +98,5 @@ jobs:
 
     - name: Run Kubesec scan
       run: |
-        docker run --rm -v $(pwd):/workspace kubesec/kubesec:latest scan /workspace/gateway-api/*.yaml
-        docker run --rm -v $(pwd):/workspace kubesec/kubesec:latest scan /workspace/security/*.yaml
-
+        find gateway-api/ -name "*.yaml" -exec docker run --rm -v $(pwd):/workspace kubesec/kubesec:latest scan /workspace/{} \;
+        find security/ -name "*.yaml" -exec docker run --rm -v $(pwd):/workspace kubesec/kubesec:latest scan /workspace/{} \;
