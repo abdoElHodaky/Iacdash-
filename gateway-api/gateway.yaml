@@ -1,0 +1,80 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: demo-gateway
+  namespace: default
+  annotations:
+    description: "Demo Gateway for testing Gateway API functionality"
+spec:
+  gatewayClassName: istio
+  listeners:
+  - name: http
+    hostname: "*.local"
+    port: 80
+    protocol: HTTP
+    allowedRoutes:
+      namespaces:
+        from: All
+  - name: https
+    hostname: "*.local"
+    port: 443
+    protocol: HTTPS
+    allowedRoutes:
+      namespaces:
+        from: All
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - name: demo-tls
+        kind: Secret
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: production-gateway
+  namespace: istio-system
+  annotations:
+    description: "Production Gateway with multiple protocols"
+spec:
+  gatewayClassName: istio
+  listeners:
+  - name: web-http
+    hostname: "api.example.com"
+    port: 80
+    protocol: HTTP
+    allowedRoutes:
+      namespaces:
+        from: Selector
+        selector:
+          matchLabels:
+            gateway: "production"
+  - name: web-https
+    hostname: "api.example.com"
+    port: 443
+    protocol: HTTPS
+    allowedRoutes:
+      namespaces:
+        from: Selector
+        selector:
+          matchLabels:
+            gateway: "production"
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - name: api-tls
+        kind: Secret
+  - name: grpc
+    hostname: "grpc.example.com"
+    port: 443
+    protocol: HTTPS
+    allowedRoutes:
+      kinds:
+      - kind: GRPCRoute
+      namespaces:
+        from: Same
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - name: grpc-tls
+        kind: Secret
+
