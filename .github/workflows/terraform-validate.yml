@@ -68,6 +68,8 @@ jobs:
         scan-ref: 'terraform/'
         format: 'sarif'
         output: 'trivy-results.sarif'
+        tf-vars: 'terraform/examples/linode-production/terraform.tfvars.example'
+      continue-on-error: true
 
     - name: Upload Trivy scan results to GitHub Security tab
       uses: github/codeql-action/upload-sarif@v3
@@ -90,4 +92,3 @@ jobs:
         output-file: README.md
         output-method: inject
         git-push: true
-

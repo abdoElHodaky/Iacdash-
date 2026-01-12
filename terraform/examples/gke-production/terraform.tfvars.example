@@ -1,0 +1,59 @@
+# GKE Production Environment Configuration
+# Copy this file to terraform.tfvars and update with your values
+
+# Project Configuration
+project_id = "your-gcp-project-id"
+region     = "us-central1"
+location   = "us-central1-a"
+
+# Cluster Configuration
+cluster_name       = "production-gke"
+kubernetes_version = "1.28"
+
+# Network Configuration
+subnet_cidr   = "10.0.0.0/16"
+pods_cidr     = "10.1.0.0/16"
+services_cidr = "10.2.0.0/16"
+
+# Security Configuration
+master_authorized_networks = [
+  {
+    cidr_block   = "0.0.0.0/0"
+    display_name = "All networks"
+  }
+]
+private_cluster            = true
+private_endpoint           = false
+master_ipv4_cidr_block     = "172.16.0.0/28"
+ssh_source_ranges          = ["0.0.0.0/0"]
+
+# Maintenance Configuration
+maintenance_start_time = "03:00"
+
+# Monitoring Configuration
+enable_managed_prometheus = true
+use_gke_gateway_addon     = true
+
+# Node Pool Configuration
+node_pools = [
+  {
+    name         = "default-pool"
+    machine_type = "e2-standard-4"
+    min_count    = 1
+    max_count    = 10
+    disk_size_gb = 100
+    disk_type    = "pd-standard"
+    preemptible  = false
+  }
+]
+
+# Add-ons Configuration
+install_istio = true
+istio_version = "1.19.0"
+
+install_monitoring       = true
+prometheus_stack_version = "51.2.0"
+prometheus_retention     = "30d"
+prometheus_storage_size  = "50Gi"
+grafana_admin_password   = "admin123"
+grafana_storage_size     = "10Gi"
