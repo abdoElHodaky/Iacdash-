@@ -1,0 +1,93 @@
+name: Terraform Validation
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'terraform/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'terraform/**'
+
+jobs:
+  terraform-validate:
+    name: Validate Terraform
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        terraform-version: ['1.6.0', '1.7.0']
+        module:
+          - terraform/modules/kind-cluster
+          - terraform/modules/linode-lke
+          - terraform/modules/gke-cluster
+          - terraform/examples/linode-production
+          - terraform/examples/gke-production
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ matrix.terraform-version }}
+
+    - name: Terraform Format Check
+      run: terraform fmt -check -recursive
+      working-directory: ${{ matrix.module }}
+
+    - name: Terraform Init
+      run: terraform init -backend=false
+      working-directory: ${{ matrix.module }}
+
+    - name: Terraform Validate
+      run: terraform validate
+      working-directory: ${{ matrix.module }}
+
+    - name: TFLint
+      uses: terraform-linters/setup-tflint@v4
+      with:
+        tflint_version: latest
+
+    - name: Run TFLint
+      run: tflint --init && tflint
+      working-directory: ${{ matrix.module }}
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'config'
+        scan-ref: 'terraform/'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  documentation:
+    name: Generate Documentation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Generate Terraform docs
+      uses: terraform-docs/gh-actions@v1.0.0
+      with:
+        working-dir: terraform/modules/kind-cluster,terraform/modules/linode-lke,terraform/modules/gke-cluster
+        output-file: README.md
+        output-method: inject
+        git-push: true
+
