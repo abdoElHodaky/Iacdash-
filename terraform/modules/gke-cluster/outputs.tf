@@ -115,7 +115,11 @@ output "grafana_access" {
     url      = "Use GCP Console: Monitoring > Dashboards"
     username = "GCP IAM"
     password = "GCP IAM"
-  } : "Not installed"
+  } : {
+    url      = "Not installed"
+    username = "Not installed"
+    password = "Not installed"
+  }
 }
 
 output "prometheus_access" {
@@ -124,11 +128,12 @@ output "prometheus_access" {
     url = "Port-forward: kubectl port-forward -n monitoring svc/prometheus-kube-prometheus-prometheus 9090:9090"
     } : var.enable_managed_prometheus ? {
     url = "Use GCP Console: Monitoring > Metrics Explorer"
-  } : "Not installed"
+  } : {
+    url = "Not installed"
+  }
 }
 
 output "kubectl_config_command" {
   description = "Command to configure kubectl"
   value       = "gcloud container clusters get-credentials ${google_container_cluster.gateway_cluster.name} --location ${google_container_cluster.gateway_cluster.location} --project ${var.project_id}"
 }
-
