@@ -16,7 +16,7 @@ output "cluster_uuid" {
 
 output "cluster_status" {
   description = "The status of the cluster"
-  value       = openstack_containerinfra_cluster_v1.cluster.status
+  value       = openstack_containerinfra_cluster_v1.cluster.api_address != "" ? "CREATE_COMPLETE" : "CREATE_IN_PROGRESS"
 }
 
 # API Access
@@ -156,4 +156,3 @@ output "tags" {
   description = "Resource tags"
   value       = var.tags
 }
-

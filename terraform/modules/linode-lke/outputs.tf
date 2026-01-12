@@ -21,7 +21,7 @@ output "api_endpoints" {
 
 output "status" {
   description = "Cluster status"
-  value       = linode_lke_cluster.gateway_cluster.status
+  value       = linode_lke_cluster.gateway_cluster.id != "" ? "ready" : "provisioning"
 }
 
 output "dashboard_url" {

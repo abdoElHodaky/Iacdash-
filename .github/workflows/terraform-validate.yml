@@ -89,5 +89,13 @@ jobs:
         working-dir: terraform/modules/kind-cluster,terraform/modules/linode-lke,terraform/modules/gke-cluster
         output-file: README.md
         output-method: inject
-        git-push: true
-
+        git-push: false
+        
+    - name: Check for documentation changes
+      run: |
+        if git diff --quiet; then
+          echo "No documentation changes detected"
+        else
+          echo "Documentation changes detected but not pushing (CI environment)"
+          git diff --name-only
+        fi
