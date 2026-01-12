@@ -42,8 +42,8 @@ output "kubeconfig_raw" {
     cluster_name           = google_container_cluster.gateway_cluster.name
     cluster_endpoint       = google_container_cluster.gateway_cluster.endpoint
     cluster_ca_certificate = google_container_cluster.gateway_cluster.master_auth.0.cluster_ca_certificate
-    project_id            = var.project_id
-    location              = google_container_cluster.gateway_cluster.location
+    project_id             = var.project_id
+    location               = google_container_cluster.gateway_cluster.location
   })
   sensitive = true
 }
@@ -111,7 +111,7 @@ output "grafana_access" {
     url      = "Port-forward: kubectl port-forward -n monitoring svc/prometheus-grafana 3000:80"
     username = "admin"
     password = "[REDACTED]"
-  } : var.enable_managed_prometheus ? {
+    } : var.enable_managed_prometheus ? {
     url      = "Use GCP Console: Monitoring > Dashboards"
     username = "GCP IAM"
     password = "GCP IAM"
@@ -122,7 +122,7 @@ output "prometheus_access" {
   description = "Prometheus access information"
   value = var.install_monitoring && !var.enable_managed_prometheus ? {
     url = "Port-forward: kubectl port-forward -n monitoring svc/prometheus-kube-prometheus-prometheus 9090:9090"
-  } : var.enable_managed_prometheus ? {
+    } : var.enable_managed_prometheus ? {
     url = "Use GCP Console: Monitoring > Metrics Explorer"
   } : "Not installed"
 }

@@ -95,14 +95,14 @@ variable "use_gke_gateway_addon" {
 variable "node_pools" {
   description = "Node pool configurations"
   type = map(object({
-    node_count    = number
-    machine_type  = string
-    disk_size_gb  = number
-    disk_type     = string
-    preemptible   = bool
-    labels        = map(string)
-    tags          = list(string)
-    max_surge     = number
+    node_count      = number
+    machine_type    = string
+    disk_size_gb    = number
+    disk_type       = string
+    preemptible     = bool
+    labels          = map(string)
+    tags            = list(string)
+    max_surge       = number
     max_unavailable = number
     autoscaling = optional(object({
       min_node_count = number

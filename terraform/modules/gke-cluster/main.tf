@@ -63,7 +63,7 @@ resource "google_container_cluster" "gateway_cluster" {
     for_each = var.master_authorized_networks != null ? [var.master_authorized_networks] : []
     content {
       gcp_public_cidrs_access_enabled = master_authorized_networks_config.value.gcp_public_cidrs_access_enabled
-      
+
       dynamic "cidr_blocks" {
         for_each = master_authorized_networks_config.value.cidr_blocks
         content {
@@ -89,15 +89,15 @@ resource "google_container_cluster" "gateway_cluster" {
     http_load_balancing {
       disabled = false
     }
-    
+
     horizontal_pod_autoscaling {
       disabled = false
     }
-    
+
     network_policy_config {
       disabled = false
     }
-    
+
     dns_cache_config {
       enabled = true
     }
@@ -117,7 +117,7 @@ resource "google_container_cluster" "gateway_cluster" {
 
   monitoring_config {
     enable_components = ["SYSTEM_COMPONENTS"]
-    
+
     managed_prometheus {
       enabled = var.enable_managed_prometheus
     }
@@ -128,10 +128,10 @@ resource "google_container_cluster" "gateway_cluster" {
 resource "google_container_node_pool" "primary_nodes" {
   for_each = var.node_pools
 
-  name       = each.key
-  location   = var.location
-  cluster    = google_container_cluster.gateway_cluster.name
-  project    = var.project_id
+  name     = each.key
+  location = var.location
+  cluster  = google_container_cluster.gateway_cluster.name
+  project  = var.project_id
 
   node_count = each.value.node_count
 
@@ -223,7 +223,7 @@ data "http" "gateway_api_crds" {
 resource "kubernetes_manifest" "gateway_api_crds" {
   count      = var.use_gke_gateway_addon ? 0 : 1
   depends_on = [google_container_cluster.gateway_cluster]
-  
+
   for_each = var.use_gke_gateway_addon ? {} : {
     for manifest in split("---", data.http.gateway_api_crds[0].response_body) :
     yamldecode(manifest).metadata.name => yamldecode(manifest)

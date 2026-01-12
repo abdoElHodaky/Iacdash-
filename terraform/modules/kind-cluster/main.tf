@@ -62,7 +62,7 @@ data "http" "gateway_api_crds" {
 
 resource "kubernetes_manifest" "gateway_api_crds" {
   depends_on = [kind_cluster.default]
-  
+
   for_each = {
     for manifest in split("---", data.http.gateway_api_crds.response_body) :
     yamldecode(manifest).metadata.name => yamldecode(manifest)

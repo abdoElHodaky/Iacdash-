@@ -51,7 +51,7 @@ metadata:
 spec:
   gatewayClassName: istio
   listeners:
-  - name: http
+    - name: http
     hostname: "*.${cluster_env:=dev}.local"
     port: 80
     protocol: HTTP
@@ -152,4 +152,3 @@ spec:
     targetPort: 80
     protocol: TCP
   type: ClusterIP
-

@@ -32,7 +32,7 @@ resource "linode_lke_cluster" "gateway_cluster" {
     content {
       type  = pool.value.type
       count = pool.value.count
-      
+
       dynamic "autoscaler" {
         for_each = pool.value.autoscaler != null ? [pool.value.autoscaler] : []
         content {
@@ -48,12 +48,12 @@ resource "linode_lke_cluster" "gateway_cluster" {
     for_each = var.control_plane_acl != null ? [var.control_plane_acl] : []
     content {
       high_availability = control_plane.value.high_availability
-      
+
       dynamic "acl" {
         for_each = control_plane.value.acl != null ? [control_plane.value.acl] : []
         content {
           enabled = acl.value.enabled
-          
+
           dynamic "addresses" {
             for_each = acl.value.addresses != null ? acl.value.addresses : []
             content {
@@ -74,7 +74,7 @@ data "http" "gateway_api_crds" {
 
 resource "kubernetes_manifest" "gateway_api_crds" {
   depends_on = [linode_lke_cluster.gateway_cluster]
-  
+
   for_each = {
     for manifest in split("---", data.http.gateway_api_crds.response_body) :
     yamldecode(manifest).metadata.name => yamldecode(manifest)

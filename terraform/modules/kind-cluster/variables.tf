@@ -8,7 +8,7 @@ variable "worker_nodes" {
   description = "Number of worker nodes"
   type        = number
   default     = 2
-  
+
   validation {
     condition     = var.worker_nodes >= 1 && var.worker_nodes <= 10
     error_message = "Worker nodes must be between 1 and 10."

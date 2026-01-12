@@ -62,7 +62,7 @@ variable "control_plane_acl" {
       enabled = true
       addresses = [
         {
-          ipv4 = ["0.0.0.0/0"]  # Replace with your office/VPN IPs
+          ipv4 = ["0.0.0.0/0"] # Replace with your office/VPN IPs
         }
       ]
     }

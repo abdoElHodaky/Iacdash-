@@ -84,9 +84,9 @@ module "gke_cluster" {
 
   # Security configuration
   master_authorized_networks = var.master_authorized_networks
-  private_cluster           = var.private_cluster
-  private_endpoint          = var.private_endpoint
-  master_ipv4_cidr_block    = var.master_ipv4_cidr_block
+  private_cluster            = var.private_cluster
+  private_endpoint           = var.private_endpoint
+  master_ipv4_cidr_block     = var.master_ipv4_cidr_block
 
   # Maintenance configuration
   maintenance_start_time = var.maintenance_start_time
@@ -103,12 +103,12 @@ module "gke_cluster" {
   istio_version = var.istio_version
 
   # Monitoring configuration (only if not using managed Prometheus)
-  install_monitoring        = var.install_monitoring
-  prometheus_stack_version  = var.prometheus_stack_version
-  prometheus_retention      = var.prometheus_retention
-  prometheus_storage_size   = var.prometheus_storage_size
-  grafana_admin_password    = var.grafana_admin_password
-  grafana_storage_size      = var.grafana_storage_size
+  install_monitoring       = var.install_monitoring
+  prometheus_stack_version = var.prometheus_stack_version
+  prometheus_retention     = var.prometheus_retention
+  prometheus_storage_size  = var.prometheus_storage_size
+  grafana_admin_password   = var.grafana_admin_password
+  grafana_storage_size     = var.grafana_storage_size
 }
 
 # Create firewall rules for the cluster

@@ -22,13 +22,13 @@ provider "linode" {
 }
 
 provider "kubernetes" {
-  config_path = "~/.kube/config"
+  config_path    = "~/.kube/config"
   config_context = "lke${module.linode_cluster.cluster_id}-ctx"
 }
 
 provider "helm" {
   kubernetes {
-    config_path = "~/.kube/config"
+    config_path    = "~/.kube/config"
     config_context = "lke${module.linode_cluster.cluster_id}-ctx"
   }
 }
@@ -38,25 +38,25 @@ module "linode_cluster" {
   source = "../../modules/linode-lke"
 
   cluster_name       = var.cluster_name
-  region            = var.region
+  region             = var.region
   kubernetes_version = var.kubernetes_version
-  
+
   node_pools = var.node_pools
-  
+
   control_plane_acl = var.control_plane_acl
-  tags             = var.tags
+  tags              = var.tags
 
   # Service mesh configuration
-  install_istio    = var.install_istio
-  istio_version    = var.istio_version
+  install_istio = var.install_istio
+  istio_version = var.istio_version
 
   # Monitoring configuration
-  install_monitoring        = var.install_monitoring
-  prometheus_stack_version  = var.prometheus_stack_version
-  prometheus_retention      = var.prometheus_retention
-  prometheus_storage_size   = var.prometheus_storage_size
-  grafana_admin_password    = var.grafana_admin_password
-  grafana_storage_size      = var.grafana_storage_size
+  install_monitoring       = var.install_monitoring
+  prometheus_stack_version = var.prometheus_stack_version
+  prometheus_retention     = var.prometheus_retention
+  prometheus_storage_size  = var.prometheus_storage_size
+  grafana_admin_password   = var.grafana_admin_password
+  grafana_storage_size     = var.grafana_storage_size
 }
 
 # Configure kubectl context after cluster creation

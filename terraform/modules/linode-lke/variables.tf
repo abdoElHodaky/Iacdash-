@@ -7,7 +7,7 @@ variable "region" {
   description = "Linode region for the cluster"
   type        = string
   default     = "us-east"
-  
+
   validation {
     condition = contains([
       "us-east", "us-west", "us-central", "us-southeast",
