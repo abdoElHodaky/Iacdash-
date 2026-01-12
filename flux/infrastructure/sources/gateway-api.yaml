@@ -52,24 +52,24 @@ spec:
   gatewayClassName: istio
   listeners:
     - name: http
-    hostname: "*.${cluster_env:=dev}.local"
-    port: 80
-    protocol: HTTP
-    allowedRoutes:
-      namespaces:
-        from: All
-  - name: https
-    hostname: "*.${cluster_env:=dev}.local"
-    port: 443
-    protocol: HTTPS
-    allowedRoutes:
-      namespaces:
-        from: All
-    tls:
-      mode: Terminate
-      certificateRefs:
-      - name: default-tls
-        kind: Secret
+      hostname: "*.${cluster_env:=dev}.local"
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: https
+      hostname: "*.${cluster_env:=dev}.local"
+      port: 443
+      protocol: HTTPS
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+        - name: default-tls
+          kind: Secret
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute

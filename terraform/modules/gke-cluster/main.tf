@@ -221,7 +221,6 @@ data "http" "gateway_api_crds" {
 }
 
 resource "kubernetes_manifest" "gateway_api_crds" {
-  count      = var.use_gke_gateway_addon ? 0 : 1
   depends_on = [google_container_cluster.gateway_cluster]
 
   for_each = var.use_gke_gateway_addon ? {} : {
@@ -351,4 +350,3 @@ resource "helm_release" "prometheus_stack" {
     value = var.grafana_storage_size
   }
 }
-
