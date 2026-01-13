@@ -1,0 +1,115 @@
+# GKE Production Cluster Configuration
+# Copy this file to terraform.tfvars and customize
+
+# Google Cloud project ID (required)
+project_id = "your-gcp-project-id"
+
+# Cluster configuration
+cluster_name       = "gateway-production"
+region            = "us-central1"
+location          = "us-central1"  # Can be region or zone
+kubernetes_version = "1.28"
+
+# Network configuration
+subnet_cidr   = "10.0.0.0/16"
+pods_cidr     = "10.1.0.0/16"
+services_cidr = "10.2.0.0/16"
+
+# Production node pools with autoscaling
+node_pools = {
+  default-pool = {
+    node_count      = 3
+    machine_type    = "e2-standard-4"  # 4 vCPU, 16GB RAM
+    disk_size_gb    = 100
+    disk_type       = "pd-standard"
+    preemptible     = false
+    labels          = {}
+    tags            = ["gke-node"]
+    max_surge       = 1
+    max_unavailable = 0
+    autoscaling = {
+      min_node_count = 2
+      max_node_count = 10
+    }
+  }
+}
+
+# Security configuration
+private_cluster            = true
+private_endpoint           = false
+master_ipv4_cidr_block     = "172.16.0.0/28"
+master_authorized_networks = {
+  gcp_public_cidrs_access_enabled = false
+  cidr_blocks = [
+    {
+      cidr_block   = "203.0.113.0/24"  # Replace with your office/VPN IP ranges
+      display_name = "Office Network"
+    }
+  ]
+}
+
+# SSH access configuration
+ssh_source_ranges = ["203.0.113.0/24"]  # Replace with your IP ranges
+
+# Maintenance configuration
+maintenance_start_time = "03:00"  # 3 AM UTC
+
+# GKE-specific features
+enable_managed_prometheus = true
+use_gke_gateway_addon     = true
+
+# Service mesh configuration
+install_istio = true
+istio_version = "1.20.1"
+
+# Production monitoring configuration
+install_monitoring        = true
+prometheus_stack_version  = "55.5.0"
+prometheus_retention      = "90d"
+prometheus_storage_size   = "100Gi"
+grafana_admin_password    = "secure-production-password"  # Change this!
+grafana_storage_size      = "20Gi"
+
+# Alternative configurations:
+
+# Cost-optimized configuration
+# node_pools = [
+#   {
+#     name               = "cost-optimized-pool"
+#     machine_type       = "e2-standard-2"  # 2 vCPU, 8GB RAM
+#     min_count          = 1
+#     max_count          = 5
+#     initial_node_count = 2
+#     disk_size_gb       = 50
+#     preemptible        = true
+#   }
+# ]
+# prometheus_retention = "30d"
+# prometheus_storage_size = "50Gi"
+
+# High-performance configuration
+# node_pools = [
+#   {
+#     name               = "high-performance-pool"
+#     machine_type       = "c2-standard-8"  # 8 vCPU, 32GB RAM
+#     min_count          = 3
+#     max_count          = 20
+#     initial_node_count = 5
+#     disk_size_gb       = 200
+#     disk_type          = "pd-ssd"
+#   }
+# ]
+# prometheus_retention = "180d"
+# prometheus_storage_size = "200Gi"
+
+# Spot instance configuration (cost-effective but less reliable)
+# node_pools = [
+#   {
+#     name               = "spot-pool"
+#     machine_type       = "e2-standard-4"
+#     min_count          = 2
+#     max_count          = 15
+#     initial_node_count = 3
+#     spot               = true
+#   }
+# ]

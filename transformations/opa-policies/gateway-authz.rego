@@ -3,13 +3,11 @@
 
 package gateway.authz
 
-import rego.v1
-
 # Default deny - all requests are denied unless explicitly allowed
 default allow = false
 
 # Allow requests that pass all authorization checks
-allow if {
+allow {
     valid_token
     valid_path
     valid_method
@@ -17,7 +15,7 @@ allow if {
 }
 
 # Token validation
-valid_token if {
+valid_token {
     # Extract token from Authorization header
     token := extract_token(input.attributes.request.http.headers.authorization)
     
@@ -29,14 +27,14 @@ valid_token if {
 }
 
 # Path validation
-valid_path if {
+valid_path {
     path := input.attributes.request.http.path
     
     # Allow health check endpoints
     startswith(path, "/health")
 }
 
-valid_path if {
+valid_path {
     path := input.attributes.request.http.path
     
     # Allow API endpoints with proper versioning
@@ -47,7 +45,7 @@ valid_path if {
     not contains(path, "//")
 }
 
-valid_path if {
+valid_path {
     path := input.attributes.request.http.path
     
     # Allow static content
@@ -55,18 +53,20 @@ valid_path if {
     
     # Only allow safe file extensions
     allowed_extensions := {".css", ".js", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico"}
-    extension := substring(path, indexof_n(path, "."), -1)
-    extension in allowed_extensions
+    # Simple check for file extensions
+    some ext
+    allowed_extensions[ext]
+    endswith(path, ext)
 }
 
 # Method validation
-valid_method if {
+valid_method {
     method := input.attributes.request.http.method
-    method in {"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"}
+    {"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"}[method]
 }
 
 # Rate limiting check (simplified)
-rate_limit_check if {
+rate_limit_check {
     # Get client identifier
     client_ip := get_client_ip
     
@@ -76,35 +76,35 @@ rate_limit_check if {
 }
 
 # Helper functions
-extract_token(auth_header) := token if {
+extract_token(auth_header) := token {
     auth_header
     startswith(auth_header, "Bearer ")
     token := substring(auth_header, 7, -1)
 }
 
-extract_token(auth_header) := "" if {
+extract_token(auth_header) := "" {
     not auth_header
 }
 
-extract_token(auth_header) := "" if {
+extract_token(auth_header) := "" {
     auth_header
     not startswith(auth_header, "Bearer ")
 }
 
-get_client_ip := ip if {
+get_client_ip := ip {
     # Try X-Forwarded-For first
     forwarded := input.attributes.request.http.headers["x-forwarded-for"]
     forwarded
     ip := split(forwarded, ",")[0]
 }
 
-get_client_ip := ip if {
+get_client_ip := ip {
     # Fall back to X-Real-IP
     not input.attributes.request.http.headers["x-forwarded-for"]
     ip := input.attributes.request.http.headers["x-real-ip"]
 }
 
-get_client_ip := ip if {
+get_client_ip := ip {
     # Fall back to source IP
     not input.attributes.request.http.headers["x-forwarded-for"]
     not input.attributes.request.http.headers["x-real-ip"]
@@ -112,7 +112,7 @@ get_client_ip := ip if {
 }
 
 # Admin endpoints require special permissions
-admin_access if {
+admin_access {
     path := input.attributes.request.http.path
     startswith(path, "/admin/")
     
@@ -125,14 +125,14 @@ admin_access if {
 }
 
 # Allow admin access only for admin endpoints
-allow if {
+allow {
     path := input.attributes.request.http.path
     startswith(path, "/admin/")
     admin_access
 }
 
 # Deny admin endpoints for non-admin users
-deny if {
+deny {
     path := input.attributes.request.http.path
     startswith(path, "/admin/")
     not admin_access
@@ -147,14 +147,14 @@ required_security_headers := {
 }
 
 # Content type validation for POST/PUT requests
-valid_content_type if {
+valid_content_type {
     method := input.attributes.request.http.method
-    method in {"GET", "DELETE", "OPTIONS"}
+    {"GET", "DELETE", "OPTIONS"}[method]
 }
 
-valid_content_type if {
+valid_content_type {
     method := input.attributes.request.http.method
-    method in {"POST", "PUT", "PATCH"}
+    {"POST", "PUT", "PATCH"}[method]
     
     content_type := input.attributes.request.http.headers["content-type"]
     allowed_types := {
@@ -165,12 +165,13 @@ valid_content_type if {
     }
     
     # Check if content type starts with any allowed type
-    some allowed_type in allowed_types
+    some allowed_type
+    allowed_types[allowed_type]
     startswith(content_type, allowed_type)
 }
 
 # Final authorization decision with content type check
-allow if {
+allow {
     valid_token
     valid_path
     valid_method
