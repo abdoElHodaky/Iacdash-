@@ -557,3 +557,9 @@ The platform is **immediately deployable** for enterprise production workloads w
 ---
 
 **Ready to transform your infrastructure?** Start with [QUICKSTART.md](QUICKSTART.md)!
+
+---
+
+## 📋 Additional Documentation
+
+📋 **[ARCHITECTURE.md](ARCHITECTURE.md)** - Comprehensive system architecture documentation with detailed diagrams, data flows, deployment patterns, and technical specifications for the complete enterprise platform.
