@@ -34,15 +34,24 @@ jobs:
         terraform_version: ${{ matrix.terraform-version }}
 
     - name: Terraform Format Check
-      run: terraform fmt -check -recursive
+      run: |
+        echo "🔍 Checking Terraform formatting for ${{ matrix.module }}..."
+        terraform fmt -check -recursive
+        echo "✅ Terraform formatting check passed"
       working-directory: ${{ matrix.module }}
 
     - name: Terraform Init
-      run: terraform init -backend=false
+      run: |
+        echo "🚀 Initializing Terraform for ${{ matrix.module }}..."
+        terraform init -backend=false
+        echo "✅ Terraform initialization completed"
       working-directory: ${{ matrix.module }}
 
     - name: Terraform Validate
-      run: terraform validate
+      run: |
+        echo "🔍 Validating Terraform configuration for ${{ matrix.module }}..."
+        terraform validate
+        echo "✅ Terraform validation passed"
       working-directory: ${{ matrix.module }}
 
     - name: TFLint
@@ -51,7 +60,10 @@ jobs:
         tflint_version: latest
 
     - name: Run TFLint
-      run: tflint --init && tflint
+      run: |
+        echo "🔍 Running TFLint for ${{ matrix.module }}..."
+        tflint --init && tflint
+        echo "✅ TFLint completed successfully"
       working-directory: ${{ matrix.module }}
 
   security-scan:
@@ -90,4 +102,3 @@ jobs:
         output-file: README.md
         output-method: inject
         git-push: true
-
