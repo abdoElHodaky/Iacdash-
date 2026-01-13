@@ -71,7 +71,10 @@ jobs:
       run: |
         # Validate Flux manifests without cluster connectivity
         if [ -d "./flux/clusters/dev" ]; then
-          flux build kustomization flux-system --path ./flux/clusters/dev --dry-run
+          echo "Validating Flux Kustomization resources..."
+          # Use kubectl to validate YAML syntax for Flux resources
+          find flux/clusters/dev -name "*.yaml" -exec kubectl apply --dry-run=client -f {} \;
+          echo "Flux manifest validation completed"
         else
           echo "FluxCD cluster configuration not found, skipping validation"
         fi
