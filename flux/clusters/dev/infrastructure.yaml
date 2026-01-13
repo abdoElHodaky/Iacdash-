@@ -16,9 +16,9 @@ spec:
     - name: flux-system
   healthChecks:
     - apiVersion: source.toolkit.fluxcd.io/v1beta2
-    kind: HelmRepository
-    name: istio
-    namespace: istio-system
+      kind: HelmRepository
+      name: istio
+      namespace: istio-system
     - apiVersion: source.toolkit.fluxcd.io/v1beta2
       kind: HelmRepository
       name: prometheus-community
