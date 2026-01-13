@@ -13,6 +13,10 @@ terraform {
       source  = "hashicorp/helm"
       version = "~> 2.11"
     }
+    null = {
+      source  = "hashicorp/null"
+      version = "~> 3.2"
+    }
   }
 }
 
@@ -75,4 +79,3 @@ resource "null_resource" "configure_kubectl" {
     cluster_id = module.linode_cluster.cluster_id
   }
 }
-

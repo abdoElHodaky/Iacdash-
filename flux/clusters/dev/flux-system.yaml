@@ -31,9 +31,9 @@ spec:
   validation: client
   healthChecks:
     - apiVersion: apps/v1
-    kind: Deployment
-    name: source-controller
-    namespace: flux-system
+      kind: Deployment
+      name: source-controller
+      namespace: flux-system
     - apiVersion: apps/v1
       kind: Deployment
       name: kustomize-controller
