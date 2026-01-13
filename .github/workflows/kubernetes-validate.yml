@@ -69,8 +69,20 @@ jobs:
 
     - name: Validate Flux manifests
       run: |
-        flux check --pre
-        flux diff kustomization flux-system --path ./flux/clusters/dev
+        # Install kustomize for validation
+        curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+        sudo mv kustomize /usr/local/bin/
+        
+        # Validate FluxCD kustomizations can be built
+        echo "🔍 Validating FluxCD kustomizations..."
+        for cluster_dir in flux/clusters/*/; do
+          if [ -f "$cluster_dir/kustomization.yaml" ]; then
+            echo "Validating $cluster_dir"
+            kustomize build "$cluster_dir" > /dev/null
+            echo "✅ $cluster_dir validation passed"
+          fi
+        done
+        echo "🎉 All FluxCD configurations are valid"
 
   policy-validation:
     name: Validate OPA Policies
