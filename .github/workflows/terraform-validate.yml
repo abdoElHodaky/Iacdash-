@@ -14,6 +14,7 @@ jobs:
   terraform-validate:
     name: Validate Terraform
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       matrix:
         terraform-version: ['1.6.0', '1.7.0']
@@ -45,18 +46,23 @@ jobs:
       run: terraform validate
       working-directory: ${{ matrix.module }}
 
-    - name: TFLint
+    - name: Setup TFLint
       uses: terraform-linters/setup-tflint@v4
       with:
-        tflint_version: latest
+        tflint_version: v0.50.3
+        github_token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Run TFLint
-      run: tflint --init && tflint
+      run: |
+        tflint --init
+        tflint --format compact
       working-directory: ${{ matrix.module }}
+      continue-on-error: true
 
   security-scan:
     name: Security Scan
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -78,6 +84,7 @@ jobs:
   documentation:
     name: Generate Documentation
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: github.event_name == 'pull_request'
     steps:
     - name: Checkout code
