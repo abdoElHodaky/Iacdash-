@@ -94,6 +94,9 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        ref: ${{ github.head_ref }}
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Generate Terraform docs
       uses: terraform-docs/gh-actions@v1.0.0
