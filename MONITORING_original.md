@@ -26,6 +26,146 @@ The observability stack provides three pillars:
 - **Logs** (Loki): Structured and unstructured log data
 - **Traces** (Tempo): Distributed request tracing
 
+### **🏗️ Observability Architecture**
+
+```mermaid
+graph TB
+    subgraph "Data Sources"
+        Apps[Applications]
+        K8s[Kubernetes API]
+        Istio[Istio Proxies]
+        Infra[Infrastructure]
+    end
+    
+    subgraph "Collection Layer"
+        PM[Prometheus]
+        Loki[Loki]
+        Tempo[Tempo]
+        Jaeger[Jaeger]
+    end
+    
+    subgraph "Storage Layer"
+        TSDB[(Time Series DB)]
+        LogDB[(Log Storage)]
+        TraceDB[(Trace Storage)]
+    end
+    
+    subgraph "Visualization"
+        Grafana[Grafana Dashboards]
+        AlertMgr[Alert Manager]
+    end
+    
+    subgraph "AI/ML Layer"
+        Anomaly[Anomaly Detection]
+        Predict[Predictive Analytics]
+        AutoScale[Auto-scaling]
+    end
+    
+    Apps --> PM
+    Apps --> Loki
+    Apps --> Tempo
+    K8s --> PM
+    Istio --> PM
+    Istio --> Tempo
+    Infra --> PM
+    
+    PM --> TSDB
+    Loki --> LogDB
+    Tempo --> TraceDB
+    Jaeger --> TraceDB
+    
+    TSDB --> Grafana
+    LogDB --> Grafana
+    TraceDB --> Grafana
+    
+    PM --> AlertMgr
+    AlertMgr --> Grafana
+    
+    TSDB --> Anomaly
+    Anomaly --> Predict
+    Predict --> AutoScale
+    
+    style PM fill:#e1f5fe
+    style Loki fill:#f3e5f5
+    style Tempo fill:#e8f5e8
+    style Grafana fill:#fff3e0
+```
+
+### **📊 Three Pillars of Observability**
+
+```ascii
+┌─────────────────────────────────────────────────────────────────┐
+│                  OBSERVABILITY PILLARS                         │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐        │
+│  │   METRICS   │     │    LOGS     │     │   TRACES    │        │
+│  │             │     │             │     │             │        │
+│  │ Prometheus  │     │    Loki     │     │   Tempo     │        │
+│  │             │     │             │     │             │        │
+│  │ • CPU/RAM   │     │ • App Logs  │     │ • Req Flow  │        │
+│  │ • Requests  │     │ • K8s Events│     │ • Latency   │        │
+│  │ • Errors    │     │ • Audit     │     │ • Errors    │        │
+│  │ • Latency   │     │ • Security  │     │ • Deps      │        │
+│  └─────────────┘     └─────────────┘     └─────────────┘        │
+│         │                     │                     │            │
+│         ▼                     ▼                     ▼            │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │                 GRAFANA UNIFIED VIEW                    │    │
+│  │                                                         │    │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │    │
+│  │  │ Dashboards  │  │   Alerts    │  │  Explore    │     │    │
+│  │  │             │  │             │  │             │     │    │
+│  │  │ • SLI/SLO   │  │ • Threshold │  │ • Query     │     │    │
+│  │  │ • Business  │  │ • Anomaly   │  │ • Correlate │     │    │
+│  │  │ • Technical │  │ • Predictive│  │ • Debug     │     │    │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘     │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │                 AI-POWERED INSIGHTS                     │    │
+│  │  • Anomaly Detection    • Predictive Scaling           │    │
+│  │  • Root Cause Analysis  • Performance Optimization     │    │
+│  │  • Capacity Planning    • Cost Optimization            │    │
+│  └─────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### **🔄 Data Flow & Correlation**
+
+```mermaid
+sequenceDiagram
+    participant App as Application
+    participant Proxy as Envoy Proxy
+    participant Prom as Prometheus
+    participant Loki as Loki
+    participant Tempo as Tempo
+    participant Graf as Grafana
+    
+    App->>Proxy: HTTP Request
+    Proxy->>App: Forward Request
+    App->>App: Process Request
+    App->>Proxy: HTTP Response
+    Proxy->>App: Forward Response
+    
+    par Metrics Collection
+        Proxy->>Prom: Request metrics<br/>(rate, latency, errors)
+        App->>Prom: Business metrics<br/>(custom counters)
+    and Log Collection
+        App->>Loki: Application logs<br/>(structured JSON)
+        Proxy->>Loki: Access logs<br/>(request details)
+    and Trace Collection
+        Proxy->>Tempo: Trace spans<br/>(request journey)
+        App->>Tempo: Custom spans<br/>(business logic)
+    end
+    
+    Graf->>Prom: Query metrics
+    Graf->>Loki: Query logs
+    Graf->>Tempo: Query traces
+    
+    Note over Graf: Correlate data using<br/>trace IDs and labels
+```
+
 ### Architecture
 
 ```

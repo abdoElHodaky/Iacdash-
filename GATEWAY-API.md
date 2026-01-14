@@ -29,51 +29,65 @@ Gateway API is the next-generation Kubernetes ingress API that provides:
 - **Extensibility**: Custom resources and filters
 - **Portable**: Works across multiple implementations (Istio, Envoy, Kong, Nginx)
 
-### **🏗️ Gateway API Architecture**
+### **🏗️ Gateway API Architecture [Golden Ratio Design]**
+
+<div align="center">
 
 ```mermaid
 graph TB
-    subgraph "External Traffic"
-        Client[Client Requests]
+    subgraph ExternalTraffic ["🌍 External Traffic [φ Entry Point]"]
+        Client["👤 Client Requests<br/>🌐 Entry Layer<br/>🎯 User Traffic"]
     end
     
-    subgraph "Gateway API Layer"
-        GC[GatewayClass<br/>Infrastructure Config]
-        GW[Gateway<br/>Load Balancer]
-        HR[HTTPRoute<br/>Routing Rules]
-        GR[GRPCRoute<br/>gRPC Routing]
-        TR[TLSRoute<br/>TLS Passthrough]
+    subgraph GatewayAPILayer ["🚪 Gateway API Layer [Golden Section - 62%]"]
+        GC["⚙️ GatewayClass<br/>🏗️ Infrastructure Config<br/>φ = 1.618<br/>🎯 Foundation"]
+        GW["🌐 Gateway<br/>⚖️ Load Balancer<br/>🎯 Central Hub<br/>🚀 Traffic Entry"]
+        HR["🌐 HTTPRoute<br/>📋 Routing Rules<br/>🎯 Primary Flow<br/>⚡ HTTP Traffic"]
+        GR["🔗 GRPCRoute<br/>⚡ gRPC Routing<br/>🎯 Secondary Flow<br/>🚀 High Performance"]
+        TR["🔐 TLSRoute<br/>🛡️ TLS Passthrough<br/>🔒 Security Layer<br/>🎯 Encrypted Traffic"]
     end
     
-    subgraph "Service Mesh"
-        VS[VirtualService]
-        DR[DestinationRule]
-        SE[ServiceEntry]
+    subgraph ServiceMesh ["🕸️ Service Mesh [Golden Proportion - 38%]"]
+        VS["🎯 VirtualService<br/>🔀 Traffic Management<br/>φ Weighted<br/>⚡ Smart Routing"]
+        DR["⚖️ DestinationRule<br/>🔄 Load Balancing<br/>🎯 Optimal Distribution<br/>🚀 Performance"]
+        SE["🌐 ServiceEntry<br/>🔗 External Services<br/>🎯 Extended Reach<br/>🌍 Global Access"]
     end
     
-    subgraph "Backend Services"
-        SVC1[Service A<br/>v1.0]
-        SVC2[Service A<br/>v2.0]
-        SVC3[Service B]
+    subgraph BackendServices ["🚀 Backend Services [Fibonacci Scaling]"]
+        SVC1["🎯 Service A v1.0<br/>✅ Stable Release<br/>📊 89% Traffic<br/>🏆 Production"]
+        SVC2["🧪 Service A v2.0<br/>🔬 Canary Release<br/>📊 11% Traffic<br/>⚡ Testing"]
+        SVC3["🎪 Service B<br/>🔄 Independent Service<br/>📊 Full Traffic<br/>🎯 Dedicated"]
     end
     
-    Client --> GW
-    GC -.-> GW
-    GW --> HR
-    GW --> GR
-    GW --> TR
-    HR --> VS
-    GR --> VS
-    VS --> DR
-    DR --> SVC1
-    DR --> SVC2
-    HR --> SVC3
+    %% Golden Ratio Traffic Flow (φ = 1.618)
+    Client -->|"🌐 Incoming Requests"| GW
+    GC -.->|"⚙️ Golden Ratio Config<br/>φ = 1.618"| GW
+    GW -->|"🎯 Primary Path φ<br/>62% Traffic"| HR
+    GW -->|"⚡ Secondary Path 1/φ<br/>23% Traffic"| GR
+    GW -->|"🔐 Security Path<br/>15% Traffic"| TR
+    HR -->|"🔀 Traffic Shaping<br/>Smart Routing"| VS
+    GR -->|"⚡ Protocol Routing<br/>gRPC Flow"| VS
+    VS -->|"⚖️ Load Distribution<br/>Golden Balance"| DR
+    DR -->|"📊 89% (Fibonacci)<br/>Stable Traffic"| SVC1
+    DR -->|"🧪 11% (Fibonacci)<br/>Canary Traffic"| SVC2
+    HR -->|"🎯 Direct Route<br/>Independent Flow"| SVC3
     
-    style GC fill:#e1f5fe
-    style GW fill:#f3e5f5
-    style HR fill:#e8f5e8
-    style VS fill:#fff3e0
+    %% Eye-catching Golden Ratio Styling
+    style Client fill:#ffebee,stroke:#c62828,stroke-width:3px,color:#000
+    style GC fill:#e3f2fd,stroke:#1565c0,stroke-width:4px,color:#000
+    style GW fill:#f3e5f5,stroke:#7b1fa2,stroke-width:4px,color:#000
+    style HR fill:#e8f5e8,stroke:#2e7d32,stroke-width:3px,color:#000
+    style GR fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#000
+    style TR fill:#fce4ec,stroke:#c2185b,stroke-width:3px,color:#000
+    style VS fill:#fff8e1,stroke:#f57c00,stroke-width:2px,color:#000
+    style DR fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+    style SE fill:#f1f8e9,stroke:#33691e,stroke-width:2px,color:#000
+    style SVC1 fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000
+    style SVC2 fill:#fff3e0,stroke:#ff8f00,stroke-width:2px,color:#000
+    style SVC3 fill:#e8eaf6,stroke:#3f51b5,stroke-width:2px,color:#000
 ```
+
+</div>
 
 ### **🔄 Traffic Flow Diagram**
 
