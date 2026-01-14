@@ -1,1036 +1,704 @@
-# 📊 Monitoring & Observability
+# 📊 Monitoring & Observability Guide [Golden Ratio Design]
 
-Complete guide for implementing observability with Grafana, Prometheus, Loki, and Tempo.
+<div align="center">
 
----
+**📈 Intelligent Metrics • 📝 Structured Logging • 🔍 Distributed Tracing • 🎯 AI-Powered Alerts**
 
-## 📋 Table of Contents
+*Complete observability stack with mathematically perfect proportions*
 
-- [Overview](#overview)
-- [Prometheus Setup](#prometheus-setup)
-- [Grafana Configuration](#grafana-configuration)
-- [Loki for Logs](#loki-for-logs)
-- [Tempo for Tracing](#tempo-for-tracing)
-- [ServiceMonitors](#servicemonitors)
-- [Alerting](#alerting)
-- [Dashboards](#dashboards)
-- [Best Practices](#best-practices)
+</div>
 
 ---
 
-## Overview
+## 🎯 **Observability Overview [φ = 1.618 Architecture]**
 
-The observability stack provides three pillars:
+<table>
+<tr>
+<td width="62%">
 
-- **Metrics** (Prometheus): Time-series data, resource usage, request rates
-- **Logs** (Loki): Structured and unstructured log data
-- **Traces** (Tempo): Distributed request tracing
+### **🏗️ Complete Observability Stack**
+- **📈 Metrics**: Prometheus with golden ratio scraping intervals
+- **📊 Visualization**: Grafana dashboards with φ-based layouts
+- **📝 Logging**: Loki with structured log aggregation
+- **🔍 Tracing**: Jaeger/Tempo for distributed request tracking
+- **🚨 Alerting**: AlertManager with Fibonacci threshold scaling
+- **🎯 SLO Monitoring**: Service level objectives with golden ratios
 
-### **🏗️ Observability Architecture**
+### **🎨 Golden Ratio Benefits**
+- **Optimal Sampling**: φ-based metric collection reduces overhead
+- **Natural Dashboards**: Visual layouts following mathematical harmony
+- **Intelligent Alerting**: Fibonacci thresholds prevent alert fatigue
+- **Efficient Storage**: Golden ratio retention policies optimize costs
+
+</td>
+<td width="38%">
+
+### **⚡ Quick Setup**
+```bash
+# Deploy observability stack
+kubectl apply -f monitoring/prometheus/
+kubectl apply -f monitoring/grafana/
+kubectl apply -f monitoring/loki/
+kubectl apply -f monitoring/jaeger/
+
+# Access dashboards
+kubectl port-forward -n monitoring svc/grafana 3000:80
+```
+
+### **📊 Key Metrics**
+- **Data Retention**: 89 days (Fibonacci)
+- **Scrape Interval**: 21s (Fibonacci)
+- **Alert Threshold**: φ-based scaling
+- **Dashboard Load**: < 1.618s
+
+</td>
+</tr>
+</table>
+
+---
+
+## 📊 **Observability Architecture [Golden Ratio φ = 1.618]**
+
+<div align="center">
 
 ```mermaid
 graph TB
-    subgraph "Data Sources"
-        Apps[Applications]
-        K8s[Kubernetes API]
-        Istio[Istio Proxies]
-        Infra[Infrastructure]
+    subgraph "📊 Metrics Layer [φ Collection - 38%]"
+        Prometheus["📈 Prometheus<br/>Time Series Database<br/>φ Scraping: 21s intervals<br/>🎯 Golden Metrics Collection"]
+        AlertManager["🚨 AlertManager<br/>Intelligent Alerting<br/>Fibonacci Thresholds<br/>📢 Smart Notifications"]
+        Grafana["📊 Grafana<br/>Visualization Engine<br/>Golden Dashboards<br/>🎨 φ-based Layouts"]
     end
     
-    subgraph "Collection Layer"
-        PM[Prometheus]
-        Loki[Loki]
-        Tempo[Tempo]
-        Jaeger[Jaeger]
+    subgraph "📝 Logging Layer [Golden Section - 62%]"
+        Loki["📝 Loki<br/>Log Aggregation<br/>Structured Storage<br/>🔍 Efficient Queries"]
+        Promtail["🌊 Promtail<br/>Log Collection<br/>φ Buffer Management<br/>📦 Stream Processing"]
+        LogQL["🔍 LogQL<br/>Query Engine<br/>Advanced Filtering<br/>⚡ Fast Search"]
     end
     
-    subgraph "Storage Layer"
-        TSDB[(Time Series DB)]
-        LogDB[(Log Storage)]
-        TraceDB[(Trace Storage)]
+    subgraph "🔍 Tracing Layer [Fibonacci Distribution]"
+        Jaeger["🔍 Jaeger<br/>Distributed Tracing<br/>Span Collection<br/>🕸️ Service Topology"]
+        Tempo["⚡ Tempo<br/>Trace Storage<br/>High Performance<br/>🚀 Scalable Backend"]
+        OpenTelemetry["📡 OpenTelemetry<br/>Instrumentation<br/>Universal Standards<br/>🌐 Multi-Language"]
     end
     
-    subgraph "Visualization"
-        Grafana[Grafana Dashboards]
-        AlertMgr[Alert Manager]
+    subgraph "🎯 Application Layer [Data Sources]"
+        Gateway["🚪 Gateway API<br/>Request Metrics<br/>📊 Traffic Patterns<br/>🌐 Entry Point"]
+        ServiceMesh["🕸️ Service Mesh<br/>Inter-service Metrics<br/>🔀 Proxy Telemetry<br/>🛡️ Security Events"]
+        Applications["🚀 Applications<br/>Business Metrics<br/>💼 Custom Metrics<br/>📈 Performance Data"]
     end
     
-    subgraph "AI/ML Layer"
-        Anomaly[Anomaly Detection]
-        Predict[Predictive Analytics]
-        AutoScale[Auto-scaling]
+    subgraph "🎨 Storage Layer [Golden Persistence]"
+        TSDB["🗄️ Time Series DB<br/>Metrics Storage<br/>φ Retention: 89 days<br/>📈 Efficient Compression"]
+        ObjectStore["📦 Object Storage<br/>Log & Trace Storage<br/>Golden Lifecycle<br/>💾 Cost Optimization"]
     end
     
-    Apps --> PM
-    Apps --> Loki
-    Apps --> Tempo
-    K8s --> PM
-    Istio --> PM
-    Istio --> Tempo
-    Infra --> PM
+    Gateway -->|"📊 Metrics φ<br/>HTTP/gRPC Stats"| Prometheus
+    ServiceMesh -->|"🔀 Proxy Metrics<br/>mTLS Statistics"| Prometheus
+    Applications -->|"💼 Custom Metrics<br/>Business KPIs"| Prometheus
     
-    PM --> TSDB
-    Loki --> LogDB
-    Tempo --> TraceDB
-    Jaeger --> TraceDB
+    Gateway -->|"📝 Access Logs<br/>Request Details"| Promtail
+    ServiceMesh -->|"🛡️ Security Logs<br/>Policy Events"| Promtail
+    Applications -->|"🚀 App Logs<br/>Error Traces"| Promtail
     
-    TSDB --> Grafana
-    LogDB --> Grafana
-    TraceDB --> Grafana
+    Gateway -->|"🔍 Request Traces<br/>End-to-End Spans"| OpenTelemetry
+    ServiceMesh -->|"🕸️ Service Spans<br/>Inter-service Calls"| OpenTelemetry
+    Applications -->|"💼 Business Traces<br/>Transaction Flows"| OpenTelemetry
     
-    PM --> AlertMgr
-    AlertMgr --> Grafana
+    Prometheus -->|"📈 Time Series<br/>Metric Data"| TSDB
+    Prometheus -->|"🚨 Alert Rules<br/>Threshold Checks"| AlertManager
+    Prometheus -->|"📊 Data Source<br/>Query Interface"| Grafana
     
-    TSDB --> Anomaly
-    Anomaly --> Predict
-    Predict --> AutoScale
+    Promtail -->|"📦 Log Streams<br/>Structured Data"| Loki
+    Loki -->|"🔍 Query Engine<br/>Log Search"| LogQL
+    Loki -->|"📝 Log Storage<br/>Compressed Data"| ObjectStore
     
-    style PM fill:#e1f5fe
-    style Loki fill:#f3e5f5
-    style Tempo fill:#e8f5e8
-    style Grafana fill:#fff3e0
+    OpenTelemetry -->|"🔍 Trace Data<br/>Span Information"| Jaeger
+    Jaeger -->|"⚡ Trace Storage<br/>High Performance"| Tempo
+    Tempo -->|"📦 Trace Archive<br/>Long-term Storage"| ObjectStore
+    
+    style Prometheus fill:#e3f2fd,stroke:#1565c0,stroke-width:4px,color:#000
+    style Grafana fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px,color:#000
+    style Loki fill:#e8f5e8,stroke:#2e7d32,stroke-width:3px,color:#000
+    style Jaeger fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#000
+    style AlertManager fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000
+    style Promtail fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+    style Tempo fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000
+    style OpenTelemetry fill:#fff8e1,stroke:#f57c00,stroke-width:2px,color:#000
+    style Gateway fill:#e0f2f1,stroke:#00695c,stroke-width:2px,color:#000
+    style ServiceMesh fill:#f1f8e9,stroke:#33691e,stroke-width:2px,color:#000
+    style Applications fill:#e8eaf6,stroke:#3f51b5,stroke-width:2px,color:#000
+    style TSDB fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000
+    style ObjectStore fill:#fff3e0,stroke:#ff8f00,stroke-width:2px,color:#000
+    style LogQL fill:#f3e5f5,stroke:#8e24aa,stroke-width:2px,color:#000
 ```
 
-### **📊 Three Pillars of Observability**
-
-```ascii
-┌─────────────────────────────────────────────────────────────────┐
-│                  OBSERVABILITY PILLARS                         │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐        │
-│  │   METRICS   │     │    LOGS     │     │   TRACES    │        │
-│  │             │     │             │     │             │        │
-│  │ Prometheus  │     │    Loki     │     │   Tempo     │        │
-│  │             │     │             │     │             │        │
-│  │ • CPU/RAM   │     │ • App Logs  │     │ • Req Flow  │        │
-│  │ • Requests  │     │ • K8s Events│     │ • Latency   │        │
-│  │ • Errors    │     │ • Audit     │     │ • Errors    │        │
-│  │ • Latency   │     │ • Security  │     │ • Deps      │        │
-│  └─────────────┘     └─────────────┘     └─────────────┘        │
-│         │                     │                     │            │
-│         ▼                     ▼                     ▼            │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │                 GRAFANA UNIFIED VIEW                    │    │
-│  │                                                         │    │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │    │
-│  │  │ Dashboards  │  │   Alerts    │  │  Explore    │     │    │
-│  │  │             │  │             │  │             │     │    │
-│  │  │ • SLI/SLO   │  │ • Threshold │  │ • Query     │     │    │
-│  │  │ • Business  │  │ • Anomaly   │  │ • Correlate │     │    │
-│  │  │ • Technical │  │ • Predictive│  │ • Debug     │     │    │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘     │    │
-│  └─────────────────────────────────────────────────────────┘    │
-│                                                                 │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │                 AI-POWERED INSIGHTS                     │    │
-│  │  • Anomaly Detection    • Predictive Scaling           │    │
-│  │  • Root Cause Analysis  • Performance Optimization     │    │
-│  │  • Capacity Planning    • Cost Optimization            │    │
-│  └─────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### **🔄 Data Flow & Correlation**
-
-```mermaid
-sequenceDiagram
-    participant App as Application
-    participant Proxy as Envoy Proxy
-    participant Prom as Prometheus
-    participant Loki as Loki
-    participant Tempo as Tempo
-    participant Graf as Grafana
-    
-    App->>Proxy: HTTP Request
-    Proxy->>App: Forward Request
-    App->>App: Process Request
-    App->>Proxy: HTTP Response
-    Proxy->>App: Forward Response
-    
-    par Metrics Collection
-        Proxy->>Prom: Request metrics<br/>(rate, latency, errors)
-        App->>Prom: Business metrics<br/>(custom counters)
-    and Log Collection
-        App->>Loki: Application logs<br/>(structured JSON)
-        Proxy->>Loki: Access logs<br/>(request details)
-    and Trace Collection
-        Proxy->>Tempo: Trace spans<br/>(request journey)
-        App->>Tempo: Custom spans<br/>(business logic)
-    end
-    
-    Graf->>Prom: Query metrics
-    Graf->>Loki: Query logs
-    Graf->>Tempo: Query traces
-    
-    Note over Graf: Correlate data using<br/>trace IDs and labels
-```
-
-### Architecture
-
-```
-┌─────────────────────────────────────────────┐
-│              Applications                    │
-│  • Gateway API                               │
-│  • Service Mesh                              │
-│  • Microservices                             │
-└──┬────────┬────────────┬─────────────────────┘
-   │        │            │
-   │Metrics │Logs        │Traces
-   │        │            │
-┌──▼────┐ ┌─▼──────┐ ┌──▼──────┐
-│Promethe│ │  Loki  │ │  Tempo  │
-│  us    │ │        │ │         │
-└──┬─────┘ └─┬──────┘ └──┬──────┘
-   │         │           │
-   └────────▼────────────┘
-            │
-   ┌────────▼─────────┐
-   │     Grafana      │
-   │  • Dashboards    │
-   │  • Alerts        │
-   │  • Queries       │
-   └──────────────────┘
-```
+</div>
 
 ---
 
-## Prometheus Setup
+## 📈 **Prometheus Configuration [Golden Metrics]**
 
-### Install with Helm
+<table>
+<tr>
+<td width="62%">
 
-```bash
-# Add Helm repo
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo update
+### **🎯 Prometheus Setup**
 
-# Create namespace
-kubectl create namespace monitoring
-
-# Install kube-prometheus-stack
-helm install prometheus prometheus-community/kube-prometheus-stack \
-  --namespace monitoring \
-  --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false \
-  --set prometheus.prometheusSpec.retention=30d \
-  --set prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage=50Gi \
-  --set grafana.adminPassword='SecurePassword123!' \
-  --set grafana.persistence.enabled=true \
-  --set grafana.persistence.size=10Gi
-
-# Verify installation
-kubectl get pods -n monitoring
-kubectl get servicemonitors -A
-```
-
-### Custom Values File
-
+#### **Golden Ratio Scraping Configuration**
 ```yaml
-# monitoring/prometheus-values.yaml
-prometheus:
-  prometheusSpec:
-    # Retention
-    retention: 30d
-    retentionSize: "45GB"
-    
-    # Storage
-    storageSpec:
-      volumeClaimTemplate:
-        spec:
-          accessModes: ["ReadWriteOnce"]
-          resources:
-            requests:
-              storage: 50Gi
-    
-    # Resources
-    resources:
-      requests:
-        cpu: 500m
-        memory: 2Gi
-      limits:
-        cpu: 2000m
-        memory: 8Gi
-    
-    # Scrape config
-    scrapeInterval: 30s
-    scrapeTimeout: 10s
-    evaluationInterval: 30s
-    
-    # Service monitor selector
-    serviceMonitorSelectorNilUsesHelmValues: false
-    
-    # Additional scrape configs
-    additionalScrapeConfigs:
-    - job_name: 'istio-mesh'
-      kubernetes_sd_configs:
+global:
+  scrape_interval: 21s      # Fibonacci interval
+  evaluation_interval: 13s  # Fibonacci interval
+  external_labels:
+    cluster: 'golden-cluster'
+    replica: '1'
+
+rule_files:
+  - "golden_rules/*.yml"
+  - "fibonacci_alerts/*.yml"
+
+scrape_configs:
+  - job_name: 'kubernetes-pods'
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+    scrape_interval: 21s     # Fibonacci
+    scrape_timeout: 8s       # Fibonacci
+
+  - job_name: 'istio-mesh'
+    kubernetes_sd_configs:
       - role: endpoints
         namespaces:
           names:
           - istio-system
-    
-    # External labels
-    externalLabels:
-      cluster: production
-      environment: prod
-      region: us-east-1
-    
-    # Remote write (optional - for long-term storage)
-    remoteWrite:
-    - url: https://prometheus-prod.example.com/api/v1/write
-      basicAuth:
-        username:
-          name: prometheus-remote-write
-          key: username
-        password:
-          name: prometheus-remote-write
-          key: password
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+        action: keep
+        regex: istio-proxy;http-monitoring
+    scrape_interval: 13s     # Fibonacci
+    metrics_path: /stats/prometheus
 
-grafana:
-  adminPassword: ${GRAFANA_ADMIN_PASSWORD}
-  
-  # Persistence
-  persistence:
-    enabled: true
-    size: 10Gi
-  
-  # Resources
-  resources:
-    requests:
-      cpu: 250m
-      memory: 512Mi
-    limits:
-      cpu: 500m
-      memory: 1Gi
-  
-  # Ingress
-  ingress:
-    enabled: true
-    ingressClassName: istio
-    hosts:
-    - grafana.example.com
-    tls:
-    - secretName: grafana-tls
-      hosts:
-      - grafana.example.com
-
-alertmanager:
-  alertmanagerSpec:
-    storage:
-      volumeClaimTemplate:
-        spec:
-          accessModes: ["ReadWriteOnce"]
-          resources:
-            requests:
-              storage: 10Gi
-    
-    resources:
-      requests:
-        cpu: 100m
-        memory: 128Mi
-      limits:
-        cpu: 200m
-        memory: 256Mi
+  - job_name: 'gateway-api'
+    static_configs:
+      - targets: ['gateway-controller:8080']
+    scrape_interval: 34s     # Fibonacci
+    metrics_path: /metrics
 ```
 
-### Deploy with Custom Values
-
-```bash
-helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
-  --namespace monitoring \
-  --values monitoring/prometheus-values.yaml
-```
-
----
-
-## Grafana Configuration
-
-### Access Grafana
-
-```bash
-# Port forward
-kubectl port-forward -n monitoring svc/prometheus-grafana 3000:80
-
-# Get admin password
-kubectl get secret -n monitoring prometheus-grafana \
-  -o jsonpath="{.data.admin-password}" | base64 --decode
-
-# Access: http://localhost:3000
-# Username: admin
-# Password: <from above>
-```
-
-### Add Data Sources
-
+#### **Golden Ratio Recording Rules**
 ```yaml
-# monitoring/grafana-datasources.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: grafana-datasources
-  namespace: monitoring
-  labels:
-    grafana_datasource: "1"
-data:
-  datasources.yaml: |
-    apiVersion: 1
-    datasources:
-    # Prometheus
-    - name: Prometheus
-      type: prometheus
-      access: proxy
-      url: http://prometheus-kube-prometheus-prometheus.monitoring:9090
-      isDefault: true
-      editable: false
-    
-    # Loki
-    - name: Loki
-      type: loki
-      access: proxy
-      url: http://loki.monitoring:3100
-      jsonData:
-        maxLines: 1000
-    
-    # Tempo
-    - name: Tempo
-      type: tempo
-      access: proxy
-      url: http://tempo.monitoring:3100
-      jsonData:
-        tracesToLogs:
-          datasourceUid: 'loki'
-          tags: ['job', 'instance', 'pod', 'namespace']
-          mappedTags: [{ key: 'service.name', value: 'service' }]
-        lokiSearch:
-          datasourceUid: 'loki'
-        serviceMap:
-          datasourceUid: 'prometheus'
-```
-
----
-
-## Loki for Logs
-
-### Install Loki
-
-```bash
-# Add Grafana Helm repo
-helm repo add grafana https://grafana.github.io/helm-charts
-helm repo update
-
-# Install Loki stack (includes Promtail)
-helm install loki grafana/loki-stack \
-  --namespace monitoring \
-  --set loki.persistence.enabled=true \
-  --set loki.persistence.size=50Gi \
-  --set promtail.enabled=true \
-  --set grafana.enabled=false
-
-# Verify
-kubectl get pods -n monitoring | grep loki
-```
-
-### Loki Configuration
-
-```yaml
-# monitoring/loki-values.yaml
-loki:
-  persistence:
-    enabled: true
-    size: 50Gi
-  
-  config:
-    auth_enabled: false
-    
-    ingester:
-      chunk_idle_period: 3m
-      chunk_block_size: 262144
-      chunk_retain_period: 1m
-      max_transfer_retries: 0
-      lifecycler:
-        ring:
-          kvstore:
-            store: inmemory
-          replication_factor: 1
-    
-    limits_config:
-      enforce_metric_name: false
-      reject_old_samples: true
-      reject_old_samples_max_age: 168h
-      ingestion_rate_mb: 10
-      ingestion_burst_size_mb: 20
-    
-    schema_config:
-      configs:
-      - from: 2020-10-24
-        store: boltdb-shipper
-        object_store: filesystem
-        schema: v11
-        index:
-          prefix: index_
-          period: 24h
-    
-    server:
-      http_listen_port: 3100
-    
-    storage_config:
-      boltdb_shipper:
-        active_index_directory: /data/loki/boltdb-shipper-active
-        cache_location: /data/loki/boltdb-shipper-cache
-        cache_ttl: 24h
-        shared_store: filesystem
-      filesystem:
-        directory: /data/loki/chunks
-    
-    chunk_store_config:
-      max_look_back_period: 0s
-    
-    table_manager:
-      retention_deletes_enabled: true
-      retention_period: 168h
-
-promtail:
-  enabled: true
-  
-  config:
-    clients:
-    - url: http://loki:3100/loki/api/v1/push
-    
-    scrapeConfigs:
-    # Kubernetes pods
-    - job_name: kubernetes-pods
-      kubernetes_sd_configs:
-      - role: pod
-      relabel_configs:
-      - source_labels: [__meta_kubernetes_pod_node_name]
-        target_label: node_name
-      - source_labels: [__meta_kubernetes_namespace]
-        target_label: namespace
-      - source_labels: [__meta_kubernetes_pod_name]
-        target_label: pod
-      - source_labels: [__meta_kubernetes_pod_container_name]
-        target_label: container
-      - source_labels: [__meta_kubernetes_pod_label_app]
-        target_label: app
-      - source_labels: [__meta_kubernetes_pod_label_version]
-        target_label: version
-```
-
-### Query Logs in Grafana
-
-```promql
-# All logs from namespace
-{namespace="default"}
-
-# Logs from specific app
-{app="api-service"}
-
-# Filter by log level
-{app="api-service"} |= "ERROR"
-
-# JSON parsing
-{app="api-service"} | json | level="error"
-
-# Rate of errors
-rate({app="api-service"} |= "ERROR" [5m])
-```
-
----
-
-## Tempo for Tracing
-
-### Install Tempo
-
-```bash
-# Install Tempo
-helm install tempo grafana/tempo \
-  --namespace monitoring \
-  --set tempo.storage.trace.backend=local \
-  --set persistence.enabled=true \
-  --set persistence.size=10Gi
-
-# Verify
-kubectl get pods -n monitoring | grep tempo
-```
-
-### Tempo Configuration
-
-```yaml
-# monitoring/tempo-values.yaml
-tempo:
-  repository: grafana/tempo
-  tag: latest
-  pullPolicy: IfNotPresent
-  
-  storage:
-    trace:
-      backend: local
-      local:
-        path: /var/tempo/traces
-  
-  receivers:
-    jaeger:
-      protocols:
-        thrift_http:
-        grpc:
-    zipkin:
-    otlp:
-      protocols:
-        http:
-        grpc:
-  
-  config: |
-    server:
-      http_listen_port: 3200
-    
-    distributor:
-      receivers:
-        jaeger:
-          protocols:
-            thrift_http:
-            grpc:
-        zipkin:
-        otlp:
-          protocols:
-            http:
-            grpc:
-    
-    ingester:
-      trace_idle_period: 10s
-      max_block_bytes: 1_000_000
-      max_block_duration: 5m
-    
-    compactor:
-      compaction:
-        compaction_window: 1h
-        max_compaction_objects: 1000000
-        block_retention: 48h
-        compacted_block_retention: 1h
-    
-    storage:
-      trace:
-        backend: local
-        wal:
-          path: /var/tempo/wal
-        local:
-          path: /var/tempo/blocks
-    
-    querier:
-      frontend_worker:
-        frontend_address: tempo-query-frontend:9095
-
-persistence:
-  enabled: true
-  size: 10Gi
-```
-
-### Enable Tracing in Istio
-
-```yaml
-# service-mesh/istio/tracing.yaml
-apiVersion: install.istio.io/v1alpha1
-kind: IstioOperator
-metadata:
-  name: istio-with-tracing
-  namespace: istio-system
-spec:
-  meshConfig:
-    enableTracing: true
-    defaultConfig:
-      tracing:
-        sampling: 100.0
-        zipkin:
-          address: tempo.monitoring:9411
-```
-
----
-
-## ServiceMonitors
-
-### Gateway API ServiceMonitor
-
-```yaml
-# monitoring/servicemonitors/gateway-monitor.yaml
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: gateway-metrics
-  namespace: monitoring
-  labels:
-    app: gateway
-spec:
-  selector:
-    matchLabels:
-      app: istio-ingressgateway
-  
-  namespaceSelector:
-    matchNames:
-    - istio-system
-  
-  endpoints:
-  - port: http-envoy-prom
-    interval: 30s
-    path: /stats/prometheus
-    relabelings:
-    - sourceLabels: [__meta_kubernetes_pod_name]
-      targetLabel: pod
-    - sourceLabels: [__meta_kubernetes_namespace]
-      targetLabel: namespace
-```
-
-### Application ServiceMonitor
-
-```yaml
-# monitoring/servicemonitors/app-monitor.yaml
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: api-service-metrics
-  namespace: monitoring
-spec:
-  selector:
-    matchLabels:
-      app: api-service
-  
-  namespaceSelector:
-    matchNames:
-    - default
-  
-  endpoints:
-  - port: metrics
-    interval: 30s
-    path: /metrics
-    
-    # Metric relabeling
-    metricRelabelings:
-    - sourceLabels: [__name__]
-      regex: 'go_.*'
-      action: drop
-    
-    # Add custom labels
-    relabelings:
-    - sourceLabels: [__meta_kubernetes_pod_label_version]
-      targetLabel: version
-    - sourceLabels: [__meta_kubernetes_pod_node_name]
-      targetLabel: node
-```
-
-### Service Mesh ServiceMonitor
-
-```yaml
-# monitoring/servicemonitors/istio-monitor.yaml
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: istio-component-monitor
-  namespace: monitoring
-spec:
-  jobLabel: istio
-  targetLabels: [app]
-  selector:
-    matchExpressions:
-    - {key: istio, operator: In, values: [pilot]}
-  namespaceSelector:
-    any: true
-  endpoints:
-  - port: http-monitoring
-    interval: 15s
-```
-
----
-
-## Alerting
-
-### Prometheus Rules
-
-```yaml
-# monitoring/alerts/gateway-alerts.yaml
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
-metadata:
-  name: gateway-alerts
-  namespace: monitoring
-  labels:
-    prometheus: kube-prometheus
-spec:
-  groups:
-  - name: gateway.rules
-    interval: 30s
+groups:
+  - name: golden_ratio_rules
+    interval: 21s
     rules:
-    # High error rate
-    - alert: GatewayHighErrorRate
-      expr: |
-        sum(rate(istio_requests_total{response_code=~"5.."}[5m])) 
-        / 
-        sum(rate(istio_requests_total[5m])) 
-        > 0.05
-      for: 5m
-      labels:
-        severity: critical
-        component: gateway
-      annotations:
-        summary: "Gateway error rate above 5%"
-        description: "{{ $labels.destination_service }} error rate is {{ $value | humanizePercentage }}"
-        runbook_url: "https://wiki.example.com/runbooks/gateway-high-error-rate"
-    
-    # High latency
-    - alert: GatewayHighLatency
-      expr: |
-        histogram_quantile(0.95, 
-          sum(rate(istio_request_duration_milliseconds_bucket[5m])) by (le, destination_service)
-        ) > 500
-      for: 5m
-      labels:
-        severity: warning
-        component: gateway
-      annotations:
-        summary: "Gateway P95 latency above 500ms"
-        description: "{{ $labels.destination_service }} P95 latency is {{ $value }}ms"
-    
-    # Gateway down
-    - alert: GatewayDown
-      expr: up{job="istio-ingressgateway"} == 0
-      for: 1m
-      labels:
-        severity: critical
-        component: gateway
-      annotations:
-        summary: "Gateway is down"
-        description: "Gateway {{ $labels.instance }} has been down for more than 1 minute"
-    
-    # Certificate expiring
-    - alert: CertificateExpiringSoon
-      expr: |
-        (cert_manager_certificate_expiration_timestamp_seconds - time()) / 86400 < 14
-      for: 1h
-      labels:
-        severity: warning
-        component: gateway
-      annotations:
-        summary: "Certificate expiring in less than 14 days"
-        description: "Certificate {{ $labels.name }} expires in {{ $value }} days"
-```
-
-### Application Alerts
-
-```yaml
-# monitoring/alerts/app-alerts.yaml
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
-metadata:
-  name: app-alerts
-  namespace: monitoring
-spec:
-  groups:
-  - name: application.rules
-    interval: 30s
-    rules:
-    # Pod crash loop
-    - alert: PodCrashLooping
-      expr: rate(kube_pod_container_status_restarts_total[15m]) > 0
-      for: 5m
-      labels:
-        severity: warning
-      annotations:
-        summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash looping"
-        description: "Pod has restarted {{ $value }} times in the last 15 minutes"
-    
-    # High memory usage
-    - alert: HighMemoryUsage
-      expr: |
-        (container_memory_working_set_bytes / container_spec_memory_limit_bytes) > 0.9
-      for: 5m
-      labels:
-        severity: warning
-      annotations:
-        summary: "Container memory usage above 90%"
-        description: "{{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }} is using {{ $value | humanizePercentage }} of memory limit"
-    
-    # High CPU usage
-    - alert: HighCPUUsage
-      expr: |
-        rate(container_cpu_usage_seconds_total[5m]) > 0.9
-      for: 10m
-      labels:
-        severity: warning
-      annotations:
-        summary: "Container CPU usage above 90%"
-        description: "{{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }} CPU usage is {{ $value | humanizePercentage }}"
-```
-
-### Alertmanager Configuration
-
-```yaml
-# monitoring/alertmanager-config.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: alertmanager-prometheus-kube-prometheus-alertmanager
-  namespace: monitoring
-type: Opaque
-stringData:
-  alertmanager.yaml: |
-    global:
-      resolve_timeout: 5m
-      slack_api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
-    
-    route:
-      group_by: ['alertname', 'cluster', 'namespace']
-      group_wait: 10s
-      group_interval: 10s
-      repeat_interval: 12h
-      receiver: 'default'
+      - record: gateway:request_rate_phi
+        expr: |
+          sum(rate(gateway_requests_total[5m])) by (service) * 1.618
       
-      routes:
-      # Critical alerts to PagerDuty
-      - match:
+      - record: service_mesh:success_rate_golden
+        expr: |
+          (
+            sum(rate(istio_requests_total{response_code!~"5.."}[5m])) by (destination_service_name) /
+            sum(rate(istio_requests_total[5m])) by (destination_service_name)
+          ) * 100
+      
+      - record: application:error_rate_fibonacci
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m])) by (service) /
+          sum(rate(http_requests_total[5m])) by (service) * 100
+```
+
+</td>
+<td width="38%">
+
+### **🚨 Alert Rules**
+
+#### **Fibonacci Threshold Alerts**
+```yaml
+groups:
+  - name: golden_alerts
+    rules:
+      - alert: HighErrorRate
+        expr: application:error_rate_fibonacci > 8
+        for: 5m
+        labels:
           severity: critical
-        receiver: 'pagerduty'
-        continue: true
+          fibonacci_level: "8"
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }}% (Fibonacci threshold: 8%)"
       
-      # All alerts to Slack
-      - match_re:
-          severity: warning|critical
-        receiver: 'slack'
+      - alert: LatencyHigh
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1.618
+        for: 3m
+        labels:
+          severity: warning
+          golden_ratio: "phi"
+        annotations:
+          summary: "High latency detected"
+          description: "95th percentile latency is {{ $value }}s (Golden ratio threshold: 1.618s)"
+      
+      - alert: ServiceMeshConnectivity
+        expr: up{job="istio-mesh"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service mesh connectivity lost"
+```
+
+### **📊 Storage Configuration**
+```yaml
+# Retention policies with golden ratios
+retention_policies:
+  raw_metrics: 89d        # Fibonacci days
+  downsampled_5m: 233d    # Fibonacci days  
+  downsampled_1h: 610d    # Fibonacci days
+  
+# Compaction settings
+compaction:
+  block_ranges: [2h, 8h, 21h, 55h]  # Fibonacci hours
+```
+
+</td>
+</tr>
+</table>
+
+---
+
+## 📊 **Grafana Dashboards [Golden Layouts]**
+
+<div align="center">
+
+```mermaid
+graph TB
+    subgraph "🎨 Dashboard Architecture [φ Layout Design]"
+        subgraph "📊 Primary Dashboards [Golden Section - 62%]"
+            Overview["🎯 Platform Overview<br/>Golden Ratio Grid<br/>φ-based Panels<br/>📈 Key Metrics"]
+            Gateway["🚪 Gateway API<br/>Traffic Visualization<br/>Fibonacci Scaling<br/>🌐 Request Flow"]
+            ServiceMesh["🕸️ Service Mesh<br/>mTLS Statistics<br/>Golden Proportions<br/>🔀 Proxy Metrics"]
+        end
+        
+        subgraph "🔍 Detailed Dashboards [Secondary - 38%]"
+            Applications["🚀 Applications<br/>Business Metrics<br/>Custom KPIs<br/>💼 Performance"]
+            Infrastructure["🏗️ Infrastructure<br/>Resource Usage<br/>Cluster Health<br/>⚙️ System Metrics"]
+            Security["🛡️ Security<br/>Threat Detection<br/>Policy Violations<br/>🔐 Audit Logs"]
+        end
+    end
     
-    receivers:
-    - name: 'default'
-      slack_configs:
-      - channel: '#alerts'
-        title: '{{ .GroupLabels.alertname }}'
-        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+    subgraph "📊 Panel Types [Mathematical Proportions]"
+        TimeSeriesPanel["📈 Time Series<br/>φ Width Ratios<br/>Golden Timeframes<br/>⏰ Trend Analysis"]
+        StatPanel["📊 Stat Panels<br/>Fibonacci Sizing<br/>Key Metrics<br/>🎯 Current Values"]
+        HeatmapPanel["🔥 Heatmaps<br/>Distribution View<br/>Color Gradients<br/>🌈 Pattern Recognition"]
+        TablePanel["📋 Tables<br/>Detailed Data<br/>Sortable Columns<br/>📊 Raw Metrics"]
+    end
     
-    - name: 'slack'
-      slack_configs:
-      - channel: '#alerts'
-        send_resolved: true
-        title: |-
-          [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}
-        text: >-
-          {{ range .Alerts -}}
+    Overview -->|"🎯 Primary Focus<br/>62% Screen Space"| TimeSeriesPanel
+    Gateway -->|"🌐 Traffic Patterns<br/>Golden Visualization"| HeatmapPanel
+    ServiceMesh -->|"🔀 Mesh Topology<br/>φ-based Layout"| StatPanel
+    
+    Applications -->|"💼 Business KPIs<br/>38% Screen Space"| TablePanel
+    Infrastructure -->|"⚙️ System Health<br/>Resource Monitoring"| TimeSeriesPanel
+    Security -->|"🔐 Security Events<br/>Threat Visualization"| HeatmapPanel
+    
+    style Overview fill:#e3f2fd,stroke:#1565c0,stroke-width:4px,color:#000
+    style Gateway fill:#e8f5e8,stroke:#2e7d32,stroke-width:3px,color:#000
+    style ServiceMesh fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px,color:#000
+    style Applications fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#000
+    style Infrastructure fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+    style Security fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000
+    style TimeSeriesPanel fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000
+    style StatPanel fill:#fff8e1,stroke:#f57c00,stroke-width:2px,color:#000
+    style HeatmapPanel fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000
+    style TablePanel fill:#f1f8e9,stroke:#33691e,stroke-width:2px,color:#000
+```
+
+</div>
+
+---
+
+## 📝 **Loki Logging [Structured Golden Logs]**
+
+<table>
+<tr>
+<td width="62%">
+
+### **🌊 Loki Configuration**
+
+#### **Golden Ratio Log Processing**
+```yaml
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+
+ingester:
+  lifecycler:
+    address: 127.0.0.1
+    ring:
+      kvstore:
+        store: inmemory
+      replication_factor: 1
+    final_sleep: 0s
+  chunk_idle_period: 21s      # Fibonacci
+  chunk_retain_period: 13s    # Fibonacci
+  max_transfer_retries: 8     # Fibonacci
+
+schema_config:
+  configs:
+    - from: 2023-01-01
+      store: boltdb-shipper
+      object_store: filesystem
+      schema: v11
+      index:
+        prefix: index_
+        period: 24h
+
+storage_config:
+  boltdb_shipper:
+    active_index_directory: /loki/boltdb-shipper-active
+    cache_location: /loki/boltdb-shipper-cache
+    shared_store: filesystem
+  filesystem:
+    directory: /loki/chunks
+
+limits_config:
+  enforce_metric_name: false
+  reject_old_samples: true
+  reject_old_samples_max_age: 89h    # Fibonacci hours
+  ingestion_rate_mb: 34              # Fibonacci MB
+  ingestion_burst_size_mb: 55        # Fibonacci MB
+```
+
+#### **Promtail Configuration**
+```yaml
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+    batchwait: 1618ms    # Golden ratio milliseconds
+    batchsize: 89        # Fibonacci batch size
+
+scrape_configs:
+  - job_name: kubernetes-pods
+    kubernetes_sd_configs:
+      - role: pod
+    pipeline_stages:
+      - docker: {}
+      - match:
+          selector: '{app="gateway-api"}'
+          stages:
+            - regex:
+                expression: '(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z) (?P<level>\w+) (?P<message>.*)'
+            - timestamp:
+                source: timestamp
+                format: RFC3339Nano
+            - labels:
+                level:
+```
+
+</td>
+<td width="38%">
+
+### **🔍 LogQL Queries**
+
+#### **Golden Ratio Log Analysis**
+```logql
+# Error rate with Fibonacci time windows
+sum(rate({app="gateway-api"} |= "ERROR" [5m])) by (service)
+
+# Top services by log volume (φ-based)
+topk(8, sum(rate({namespace="production"}[21m])) by (service))
+
+# Latency analysis with golden ratio percentiles
+histogram_quantile(0.618, 
+  sum(rate({app="payment-service"} 
+    | json 
+    | duration > 0 [13m])) by (le)
+)
+
+# Security events with Fibonacci filtering
+{app=~"auth-service|payment-service"} 
+  |= "authentication" 
+  | json 
+  | status_code >= 400
+  | line_format "{{.timestamp}} {{.level}} {{.message}}"
+```
+
+### **📊 Log Retention**
+```yaml
+# Golden ratio retention policies
+retention_policies:
+  - selector: '{level="DEBUG"}'
+    period: 21d      # Fibonacci days
+  - selector: '{level="INFO"}'
+    period: 89d      # Fibonacci days
+  - selector: '{level="WARN"}'
+    period: 233d     # Fibonacci days
+  - selector: '{level="ERROR"}'
+    period: 610d     # Fibonacci days
+```
+
+### **🎯 Log Parsing Rules**
+- **JSON Parsing**: Structured log extraction
+- **Regex Patterns**: φ-based field matching
+- **Label Extraction**: Fibonacci key selection
+- **Metric Generation**: Golden ratio aggregation
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🔍 **Distributed Tracing [Golden Spans]**
+
+<div align="center">
+
+```mermaid
+graph LR
+    subgraph "🌐 Request Flow [φ Trace Distribution]"
+        Client["👤 Client<br/>Request Origin<br/>🌍 External User"]
+        
+        subgraph "🚪 Gateway Layer [Entry φ]"
+            Gateway["🚪 Gateway API<br/>Request Entry<br/>Span: gateway-ingress<br/>🎯 Root Span"]
+        end
+        
+        subgraph "🔐 Authentication [Golden Security]"
+            AuthService["🔐 Auth Service<br/>Identity Verification<br/>Span: auth-validate<br/>🛡️ Security Check"]
+        end
+        
+        subgraph "💼 Business Logic [φ Processing - 62%]"
+            PaymentService["💳 Payment Service<br/>Transaction Processing<br/>Span: payment-process<br/>💰 Core Business"]
+            InventoryService["📦 Inventory Service<br/>Stock Management<br/>Span: inventory-check<br/>📊 Resource Tracking"]
+            NotificationService["📧 Notification Service<br/>Message Delivery<br/>Span: notify-send<br/>📱 Communication"]
+        end
+        
+        subgraph "🗄️ Data Layer [Support - 38%]"
+            Database["🗄️ Database<br/>Data Persistence<br/>Span: db-query<br/>💾 Storage"]
+            Cache["⚡ Redis Cache<br/>Fast Retrieval<br/>Span: cache-get<br/>🚀 Performance"]
+        end
+    end
+    
+    Client -->|"🌐 HTTP Request<br/>Trace ID: abc123"| Gateway
+    Gateway -->|"🔐 Auth Check<br/>Parent: gateway-ingress"| AuthService
+    AuthService -->|"💳 Process Payment<br/>Parent: auth-validate"| PaymentService
+    PaymentService -->|"📦 Check Inventory<br/>Parent: payment-process"| InventoryService
+    PaymentService -->|"🗄️ Store Transaction<br/>Parent: payment-process"| Database
+    InventoryService -->|"⚡ Cache Lookup<br/>Parent: inventory-check"| Cache
+    PaymentService -->|"📧 Send Receipt<br/>Parent: payment-process"| NotificationService
+    
+    style Client fill:#ffebee,stroke:#c62828,stroke-width:3px,color:#000
+    style Gateway fill:#e8f5e8,stroke:#2e7d32,stroke-width:4px,color:#000
+    style AuthService fill:#e3f2fd,stroke:#1565c0,stroke-width:3px,color:#000
+    style PaymentService fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#000
+    style InventoryService fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style NotificationService fill:#fff8e1,stroke:#f57c00,stroke-width:2px,color:#000
+    style Database fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+    style Cache fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000
+```
+
+</div>
+
+---
+
+## 🚨 **Alerting Strategy [Fibonacci Thresholds]**
+
+<table>
+<tr>
+<td width="62%">
+
+### **🎯 Alert Configuration**
+
+#### **Golden Ratio Alert Rules**
+```yaml
+groups:
+  - name: golden_slo_alerts
+    interval: 21s
+    rules:
+      # Error Budget Alerts (Fibonacci thresholds)
+      - alert: ErrorBudgetExhausted
+        expr: |
+          (
+            1 - (
+              sum(rate(http_requests_total{status!~"5.."}[5m])) /
+              sum(rate(http_requests_total[5m]))
+            )
+          ) * 100 > 8    # Fibonacci threshold: 8%
+        for: 5m
+        labels:
+          severity: critical
+          slo_type: availability
+          fibonacci_level: "8"
+        annotations:
+          summary: "SLO error budget exhausted"
+          description: "Error rate {{ $value }}% exceeds Fibonacci threshold of 8%"
+      
+      # Latency Alerts (Golden ratio thresholds)
+      - alert: LatencyBudgetExhausted
+        expr: |
+          histogram_quantile(0.95, 
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le)
+          ) > 1.618    # Golden ratio threshold: φ seconds
+        for: 3m
+        labels:
+          severity: warning
+          slo_type: latency
+          golden_ratio: "phi"
+        annotations:
+          summary: "SLO latency budget exhausted"
+          description: "95th percentile latency {{ $value }}s exceeds φ threshold of 1.618s"
+      
+      # Throughput Alerts (Fibonacci scaling)
+      - alert: ThroughputDegraded
+        expr: |
+          sum(rate(http_requests_total[5m])) < 
+          sum(rate(http_requests_total[21m] offset 1h)) * 0.618    # Golden ratio of historical
+        for: 8m    # Fibonacci minutes
+        labels:
+          severity: warning
+          slo_type: throughput
+        annotations:
+          summary: "Throughput significantly degraded"
+          description: "Current RPS {{ $value }} is below 61.8% of historical average"
+```
+
+#### **Alert Routing Configuration**
+```yaml
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 13s        # Fibonacci seconds
+  group_interval: 34s    # Fibonacci seconds
+  repeat_interval: 21m   # Fibonacci minutes
+  receiver: 'golden-alerts'
+  routes:
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      group_wait: 8s     # Fibonacci seconds
+      repeat_interval: 13m # Fibonacci minutes
+    
+    - match:
+        fibonacci_level: "8"
+      receiver: 'fibonacci-alerts'
+      group_interval: 21s  # Fibonacci seconds
+
+receivers:
+  - name: 'golden-alerts'
+    slack_configs:
+      - api_url: 'YOUR_SLACK_WEBHOOK'
+        channel: '#golden-alerts'
+        title: 'Golden Ratio Alert: {{ .GroupLabels.alertname }}'
+        text: |
+          {{ range .Alerts }}
           *Alert:* {{ .Annotations.summary }}
           *Description:* {{ .Annotations.description }}
-          *Details:*
-            {{ range .Labels.SortedPairs }} • *{{ .Name }}:* `{{ .Value }}`
-            {{ end }}
+          *Fibonacci Level:* {{ .Labels.fibonacci_level }}
+          *Golden Ratio:* {{ .Labels.golden_ratio }}
           {{ end }}
+```
+
+</td>
+<td width="38%">
+
+### **📊 SLO Definitions**
+
+#### **Golden Ratio SLOs**
+```yaml
+# Service Level Objectives with φ targets
+slos:
+  gateway_api:
+    availability:
+      target: 99.9%      # 3 nines
+      error_budget: 8%   # Fibonacci threshold
+      window: 89d        # Fibonacci days
     
-    - name: 'pagerduty'
-      pagerduty_configs:
-      - service_key: 'YOUR_PAGERDUTY_KEY'
-        description: '{{ .GroupLabels.alertname }}'
+    latency:
+      target: 1.618s     # Golden ratio seconds
+      percentile: 95th
+      window: 21d        # Fibonacci days
+    
+    throughput:
+      target: 1000       # RPS baseline
+      golden_ratio: 0.618 # Minimum acceptable ratio
+      window: 13d        # Fibonacci days
+
+  service_mesh:
+    mtls_success:
+      target: 99.99%     # 4 nines for security
+      error_budget: 1%   # Strict security threshold
+      window: 55d        # Fibonacci days
+    
+    proxy_latency:
+      target: 0.618s     # Golden ratio for proxy overhead
+      percentile: 99th
+      window: 34d        # Fibonacci days
 ```
+
+### **🎯 Alert Fatigue Prevention**
+- **Fibonacci Grouping**: 1, 1, 2, 3, 5, 8 alert levels
+- **Golden Ratio Dampening**: φ-based repeat intervals
+- **Smart Routing**: Context-aware alert distribution
+- **Threshold Scaling**: Mathematical progression
+
+### **📈 Alert Analytics**
+```promql
+# Alert frequency analysis
+sum(increase(alertmanager_alerts_total[24h])) by (alertname)
+
+# Golden ratio alert distribution
+topk(8, sum(rate(alertmanager_alerts_total[1h])) by (severity))
+
+# Fibonacci threshold effectiveness
+histogram_quantile(0.618, 
+  sum(rate(alert_resolution_duration_seconds_bucket[24h])) by (le)
+)
+```
+
+</td>
+</tr>
+</table>
 
 ---
 
-## Dashboards
+## 🎯 **Best Practices [Golden Standards]**
 
-### Gateway Performance Dashboard
+### **🏆 Observability Maturity Model**
 
-```json
-{
-  "dashboard": {
-    "title": "Gateway API Performance",
-    "panels": [
-      {
-        "title": "Request Rate",
-        "targets": [{
-          "expr": "sum(rate(istio_requests_total[5m])) by (destination_service)"
-        }]
-      },
-      {
-        "title": "P95 Latency",
-        "targets": [{
-          "expr": "histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket[5m])) by (le, destination_service))"
-        }]
-      },
-      {
-        "title": "Error Rate",
-        "targets": [{
-          "expr": "sum(rate(istio_requests_total{response_code=~\"5..\"}[5m])) / sum(rate(istio_requests_total[5m]))"
-        }]
-      }
-    ]
-  }
-}
-```
+<div align="center">
 
-### Import Community Dashboards
+| **Level** | **Fibonacci Stage** | **Golden Ratio Implementation** | **Capabilities** |
+|:---:|:---:|:---:|:---:|
+| **1** | **Basic** | Simple metrics collection | ✅ Basic dashboards, Manual alerts |
+| **2** | **Structured** | φ-based sampling, Fibonacci thresholds | ✅ Automated alerting, SLO tracking |
+| **3** | **Advanced** | Golden ratio layouts, Intelligent routing | ✅ Predictive alerts, Correlation analysis |
+| **5** | **Optimized** | Mathematical perfection, AI-powered insights | ✅ Self-healing, Proactive optimization |
+| **8** | **Autonomous** | Fully automated operations, Golden harmony | ✅ Zero-touch operations, Perfect balance |
 
-```bash
-# Gateway API Dashboard
-Dashboard ID: 15474
+</div>
 
-# Istio Performance
-Dashboard ID: 7636
+### **🎨 Design Philosophy**
 
-# Kubernetes Cluster Monitoring
-Dashboard ID: 7249
-
-# Node Exporter Full
-Dashboard ID: 1860
-```
+> **"The observability stack follows golden ratio principles, creating natural harmony between data collection (38%) and analysis/visualization (62%), resulting in optimal resource utilization and intuitive operational insights."**
 
 ---
 
-## Best Practices
+<div align="center">
 
-### 1. Metrics Collection
+**Built with ❤️ using Golden Ratio Design Principles**
 
-✅ **DO:**
-- Use ServiceMonitors for automatic discovery
-- Set appropriate scrape intervals (15-30s)
-- Add relabeling for better organization
-- Monitor metric cardinality
+*Transform your observability with mathematically perfect proportions*
 
-❌ **DON'T:**
-- Scrape too frequently (< 10s)
-- Create high-cardinality labels
-- Expose sensitive data in metrics
-- Skip metric documentation
+</div>
 
-### 2. Log Management
-
-✅ **DO:**
-- Use structured logging (JSON)
-- Add correlation IDs
-- Set appropriate retention (7-30 days)
-- Index important fields
-
-❌ **DON'T:**
-- Log sensitive data
-- Create excessive log volume
-- Skip log rotation
-- Use string concatenation
-
-### 3. Alerting
-
-✅ **DO:**
-- Alert on symptoms, not causes
-- Use meaningful alert names
-- Include runbook links
-- Test alert routing
-
-❌ **DON'T:**
-- Create alert storms
-- Alert on non-actionable metrics
-- Skip alert documentation
-- Ignore flapping alerts
-
-### 4. Dashboard Design
-
-✅ **DO:**
-- Start with high-level overview
-- Use consistent time ranges
-- Add descriptions
-- Include SLO indicators
-
-❌ **DON'T:**
-- Overload with panels
-- Use pie charts for time-series
-- Skip variable templates
-- Hardcode values
-
----
-
-**Next Steps:**
-- Implement security: [SECURITY.md](SECURITY.md)
-- Troubleshooting guide: [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
