@@ -67,37 +67,71 @@
 
 ```mermaid
 graph TB
-    subgraph "Multi-Cloud Infrastructure [φ = 1.618]"
-        A[Linode LKE<br/>Cost Effective] --> K[Kubernetes Gateway API<br/>Central Hub]
-        B[Google GKE<br/>Advanced Features] --> K
-        C[OpenStack<br/>Private Cloud] --> K
-        D[KinD Local<br/>Development] --> K
+    subgraph CloudInfra ["🌐 Multi-Cloud Infrastructure [φ = 1.618]"]
+        A["🌊 Linode LKE<br/>💰 Cost Effective<br/>⚡ Production Ready"]
+        B["🚀 Google GKE<br/>🏢 Enterprise Grade<br/>🎯 Advanced Features"]
+        C["🏢 OpenStack<br/>🔒 Private Cloud<br/>🛡️ Full Control"]
+        D["🔧 KinD Local<br/>🛠️ Development<br/>⚡ Fast Testing"]
+        K["🎯 Kubernetes Gateway API<br/>🌐 Central Hub<br/>📊 Traffic Management"]
     end
     
-    subgraph "Platform Layer [Golden Section]"
-        K --> E[Custom Transformations<br/>WASM • OPA • Envoy]
-        E --> F[Service Mesh - Istio<br/>Zero-Trust Security]
-        F --> G[GitOps - FluxCD<br/>Automated Delivery]
+    subgraph PlatformLayer ["⚡ Platform Layer [Golden Section - 62%]"]
+        E["🎪 Custom Transformations<br/>🦀 WASM • 📋 OPA • 🔀 Envoy<br/>🎯 Request Processing"]
+        F["🕸️ Service Mesh - Istio<br/>🔐 Zero-Trust Security<br/>🛡️ mTLS Everywhere"]
+        G["🔄 GitOps - FluxCD<br/>🚀 Automated Delivery<br/>📦 Continuous Deployment"]
     end
     
-    subgraph "Observability Stack [φ Ratio]"
-        G --> H[Prometheus Metrics<br/>Time Series Data]
-        G --> I[Grafana Dashboards<br/>Visual Analytics]
-        G --> J[Loki Logs<br/>Structured Logging]
-        G --> L[Tempo Traces<br/>Distributed Tracing]
+    subgraph ObservabilityStack ["📊 Observability Stack [φ Ratio - 38%]"]
+        H["📈 Prometheus Metrics<br/>⏰ Time Series Data<br/>🎯 Golden Intervals"]
+        I["📊 Grafana Dashboards<br/>🎨 Visual Analytics<br/>✨ Beautiful Charts"]
+        J["📝 Loki Logs<br/>🔍 Structured Logging<br/>⚡ Fast Search"]
+        L["🔍 Tempo Traces<br/>🕸️ Distributed Tracing<br/>📊 Request Flow"]
     end
     
-    subgraph "Security Layer [Golden Proportion]"
-        M[mTLS Encryption] --> F
-        N[Certificate Manager] --> F
-        O[OPA Policies] --> E
-        P[Network Policies] --> F
+    subgraph SecurityLayer ["🛡️ Security Layer [Golden Proportion]"]
+        M["🔐 mTLS Encryption<br/>🔒 End-to-End Security"]
+        N["📜 Certificate Manager<br/>🔄 Auto Rotation"]
+        O["📋 OPA Policies<br/>⚖️ Policy Engine"]
+        P["🌐 Network Policies<br/>🚧 Traffic Control"]
     end
     
-    style K fill:#e1f5fe,stroke:#01579b,stroke-width:3px
-    style F fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-    style G fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
-    style E fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    %% Golden Ratio Connections (φ = 1.618)
+    A -->|"62% Traffic"| K
+    B -->|"23% Traffic"| K
+    C -->|"15% Traffic"| K
+    D -->|"Dev Traffic"| K
+    
+    K -->|"φ Processing"| E
+    E -->|"Golden Flow"| F
+    F -->|"1.618 Ratio"| G
+    
+    G -->|"Metrics φ"| H
+    G -->|"Dashboards"| I
+    G -->|"Logs 1/φ"| J
+    G -->|"Traces"| L
+    
+    M -->|"Security φ"| F
+    N -->|"Certs"| F
+    O -->|"Policies"| E
+    P -->|"Network"| F
+    
+    %% Eye-catching Golden Ratio Styling
+    style K fill:#e3f2fd,stroke:#1565c0,stroke-width:4px,color:#000
+    style F fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px,color:#000
+    style G fill:#e8f5e8,stroke:#2e7d32,stroke-width:3px,color:#000
+    style E fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#000
+    style A fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+    style B fill:#fff8e1,stroke:#f57c00,stroke-width:2px,color:#000
+    style C fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000
+    style D fill:#f1f8e9,stroke:#33691e,stroke-width:2px,color:#000
+    style H fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000
+    style I fill:#e8eaf6,stroke:#3f51b5,stroke-width:2px,color:#000
+    style J fill:#e0f2f1,stroke:#00695c,stroke-width:2px,color:#000
+    style L fill:#fff3e0,stroke:#ff8f00,stroke-width:2px,color:#000
+    style M fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000
+    style N fill:#fce4ec,stroke:#880e4f,stroke-width:2px,color:#000
+    style O fill:#fff8e1,stroke:#f9a825,stroke-width:2px,color:#000
+    style P fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000
 ```
 
 </div>
@@ -338,4 +372,3 @@ cd Iacdash-
 *Transform your infrastructure with mathematically perfect proportions*
 
 </div>
-

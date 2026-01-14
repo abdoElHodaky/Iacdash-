@@ -63,31 +63,31 @@ kubectl apply -f samples/bookinfo/platform/kube/bookinfo.yaml
 
 ```mermaid
 graph TB
-    subgraph "🎯 Control Plane [φ Management Layer - 38%]"
+    subgraph ControlPlane ["🎯 Control Plane [φ Management Layer - 38%]"]
         Istiod["🧠 Istiod<br/>Control Plane<br/>φ Central Authority<br/>🔄 Config Distribution"]
         Pilot["🗺️ Pilot<br/>Service Discovery<br/>Golden Routing<br/>📍 Endpoint Management"]
         Citadel["🔐 Citadel<br/>Certificate Authority<br/>Security φ<br/>🛡️ mTLS Certificates"]
         Galley["⚙️ Galley<br/>Configuration<br/>Policy Distribution<br/>📋 Validation Engine"]
     end
     
-    subgraph "⚡ Data Plane [Golden Section - 62%]"
-        subgraph "🎯 Pod A [Primary Service - φ Weight]"
+    subgraph DataPlane ["⚡ Data Plane [Golden Section - 62%]"]
+        subgraph PodA ["🎯 Pod A [Primary Service - φ Weight]"]
             AppA["🚀 Application A<br/>Business Logic<br/>φ Weighted Traffic<br/>💼 Core Service"]
             ProxyA["🔀 Envoy Proxy<br/>Sidecar Pattern<br/>1.618 Ratio<br/>🛡️ Security Layer"]
         end
         
-        subgraph "🎨 Pod B [Secondary Service - 1/φ Weight]"
+        subgraph PodB ["🎨 Pod B [Secondary Service - 1/φ Weight]"]
             AppB["⚡ Application B<br/>Support Service<br/>1/φ Weighted Traffic<br/>🔧 Utility Functions"]
             ProxyB["🔀 Envoy Proxy<br/>Load Balancer<br/>Golden Distribution<br/>📊 Metrics Collection"]
         end
         
-        subgraph "🌟 Pod C [Tertiary Service - Fibonacci Scale]"
+        subgraph PodC ["🌟 Pod C [Tertiary Service - Fibonacci Scale]"]
             AppC["🎪 Application C<br/>Utility Service<br/>Fibonacci Scale<br/>🎭 Enhancement Layer"]
             ProxyC["🔀 Envoy Proxy<br/>Circuit Breaker<br/>Optimal Resilience<br/>⚡ Fault Tolerance"]
         end
     end
     
-    subgraph "🌐 Ingress Gateway [φ Entry Point]"
+    subgraph IngressGateway ["🌐 Ingress Gateway [φ Entry Point]"]
         IGW["🚪 Istio Gateway<br/>Traffic Entry<br/>Golden Gate<br/>🌍 External Interface"]
         IGWProxy["🔀 Envoy Proxy<br/>Edge Router<br/>φ Load Distribution<br/>🛡️ Security Boundary"]
     end
@@ -561,4 +561,3 @@ kubectl port-forward -n istio-system svc/jaeger 16686:16686
 *Transform your service mesh with mathematically perfect proportions*
 
 </div>
-
