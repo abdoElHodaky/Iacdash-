@@ -76,6 +76,7 @@ graph TB
     style HR fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
     style VS fill:#fff3e0,stroke:#e65100,stroke-width:2px
     style DR fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+end
 ```
 
 </div>
